@@ -87,12 +87,6 @@ public class GlobalExceptionHandler {
         return handleValidationException(ex, "Недостаточно прав для доступа", HttpStatus.FORBIDDEN);
     }
 
-//    @ExceptionHandler(OptimisticLockException.class)
-//    public ResponseEntity<ApiErrorResponseDTO> handleOptimisticLockException(Exception ex){
-//        return handleValidationException(ex, "Конфликт обновления: объект был изменён другим процессом.",
-//                HttpStatus.CONFLICT);
-//    }
-
     @ExceptionHandler(Throwable.class)
     public ResponseEntity<ApiErrorResponseDTO> handleOtherExceptions(Exception ex) {
         return handleValidationException(ex, "Неизвестная ошибка", HttpStatus.BAD_REQUEST);

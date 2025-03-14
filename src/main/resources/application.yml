@@ -1,6 +1,6 @@
 spring:
   application:
-    name: firstLabIS
+    name: firstLabBLPS
 
   servlet:
     multipart:
@@ -19,8 +19,6 @@ spring:
       eclipselink:
         weaving: static
         ddl-generation: create-or-extend-tables
-
-
 
     database-platform: org.eclipse.persistence.platform.database.PostgreSQLPlatform
 
@@ -63,3 +61,6 @@ thymeleaf:
   enabled: true
   prefix: classpath:/templates/
   suffix: .html
+
+server:
+  port: 8080
