@@ -13,10 +13,10 @@ import java.util.UUID;
 @Setter
 @Getter
 public class VideoReviewResponseDTO {
-    private UUID id;
+    private UUID videoId;
     private String title;
     private String description;
-    private String url;
     private VideoStatus status;
-    private Map<BlockReason, Long> complaintsCount;
+    private String url;
+    private Map<BlockReason, Long> complaintsSummary;
 }

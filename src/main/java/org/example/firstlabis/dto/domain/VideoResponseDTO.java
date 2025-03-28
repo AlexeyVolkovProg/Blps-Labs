@@ -15,4 +15,5 @@ public class VideoResponseDTO {
     private String description;
     private String url;
     private String status;
+    private String blockReason;
 }

@@ -13,17 +13,12 @@ spring:
       batch-writing: jdbc # Включить пакетную запись
       batch-writing.size: 50 # Размер батча (количество записей на операцию)
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
     show-sql: ${SPRING_JPA_SHOW_SQL:false}
-    properties:
-      eclipselink:
-        weaving: static
-        ddl-generation: create-or-extend-tables
-
-    database-platform: org.eclipse.persistence.platform.database.PostgreSQLPlatform
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/mydatabase}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/postgres}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
     password: ${SPRING_DATASOURCE_PASSWORD:postgres}
 

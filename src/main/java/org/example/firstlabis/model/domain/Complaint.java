@@ -5,7 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.example.firstlabis.model.audit.TrackEntity;
 import org.example.firstlabis.model.domain.enums.BlockReason;
+import org.example.firstlabis.model.security.User;
 
 import java.util.UUID;
 
@@ -14,7 +16,7 @@ import java.util.UUID;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class Complaint {
+public class Complaint extends TrackEntity {
 
     @Id
     private UUID id = UUID.randomUUID();
