@@ -55,7 +55,7 @@ public abstract class TrackEntitySecurityService<T extends TrackEntity, ID> {
      * Проверка является ли пользователь владельцем сущности или нет
      */
     private boolean isOwner(User user, TrackEntity entity) {
-        return entity.getOwner().getId().equals(user.getId());
+        return entity.getOwnerUsername().equals(user.getUsername());
     }
 
     /**

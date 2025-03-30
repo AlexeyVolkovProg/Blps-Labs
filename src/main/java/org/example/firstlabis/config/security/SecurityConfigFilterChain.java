@@ -2,9 +2,12 @@ package org.example.firstlabis.config.security;
 
 import lombok.RequiredArgsConstructor;
 import org.example.firstlabis.filter.JwtAuthenticationFilter;
+import org.example.firstlabis.model.security.Privilege;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -19,20 +22,25 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-@RequiredArgsConstructor
 public class SecurityConfigFilterChain {
-    private static final String[] WHITE_LIST_URL = {"/api/auth/**",
+    private static final String[] WHITE_LIST_URL = {
+            "/api/auth/**",
             "/swagger-ui/**",
             "/v3/api-docs/**",
             "/notify/**",
             "/app/**",
             "/test/**",
-            "/app.js"};
-    private static final String[] ADMIN_LIST_URL = {"/api/admin/**"};
-
-    private final AuthenticationProvider authenticationProvider;
-
+            "/app.js"
+    };
+    
+    private final AuthenticationManager authenticationManager;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    
+    public SecurityConfigFilterChain(@Lazy AuthenticationManager authenticationManager, 
+                                     JwtAuthenticationFilter jwtAuthenticationFilter) {
+        this.authenticationManager = authenticationManager;
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -46,13 +54,48 @@ public class SecurityConfigFilterChain {
                     corsConfiguration.setAllowCredentials(true);
                     return corsConfiguration;
                 }))
-                .authorizeHttpRequests(request ->
-                        request.requestMatchers(WHITE_LIST_URL).permitAll()
-                                .requestMatchers(ADMIN_LIST_URL).hasAuthority("ADMIN")
-                                .anyRequest().authenticated()
+                .authorizeHttpRequests(authorize -> authorize
+                        // Public endpoints
+                        .requestMatchers(WHITE_LIST_URL).permitAll()
+                        
+                        // Admin-only endpoints + give admins access to all other endpoints
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        
+                        // Video review privilege (GET /api/videos/for-review)
+                        .requestMatchers(HttpMethod.GET, "/api/videos/for-review").hasAnyAuthority(
+                            Privilege.REVIEW_VIDEO.name(), "ROLE_ADMIN"
+                        )
+                        
+                        // Video moderation (POST /api/videos/{videoId}/moderate)
+                        .requestMatchers(HttpMethod.POST, "/api/videos/*/moderate").hasAnyAuthority(
+                            Privilege.REVIEW_VIDEO.name(), "ROLE_ADMIN"
+                        )
+                        
+                        // Video creation (POST /api/videos)
+                        .requestMatchers(HttpMethod.POST, "/api/videos").hasAnyAuthority(
+                            Privilege.CREATE_VIDEO.name(), "ROLE_ADMIN"
+                        )
+                        
+                        // Get specific video (GET /api/videos/{videoId})
+                        .requestMatchers(HttpMethod.GET, "/api/videos/*").hasAnyAuthority(
+                            Privilege.VIEW_VIDEO.name(), "ROLE_ADMIN"
+                        )
+                        
+                        // Get approved/rejected videos (GET /api/videos/approved-rejected)
+                        .requestMatchers(HttpMethod.GET, "/api/videos/approved-rejected").hasAnyAuthority(
+                            Privilege.VIEW_VIDEO.name(), "ROLE_ADMIN"
+                        )
+                        
+                        // Create complaint (POST /api/videos/complaints)
+                        .requestMatchers(HttpMethod.POST, "/api/videos/complaints").hasAnyAuthority(
+                            Privilege.CREATE_COMPLAINT.name(), "ROLE_ADMIN"
+                        )
+                        
+                        // All other requests need authentication
+                        .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authenticationProvider(authenticationProvider)
+                .authenticationManager(authenticationManager)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

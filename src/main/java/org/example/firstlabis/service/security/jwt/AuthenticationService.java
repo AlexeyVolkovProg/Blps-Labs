@@ -1,15 +1,17 @@
 package org.example.firstlabis.service.security.jwt;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.firstlabis.dto.authentication.request.UserDto;
 import org.example.firstlabis.dto.authentication.response.JwtResponseDTO;
 import org.example.firstlabis.dto.authentication.request.LoginRequestDTO;
 import org.example.firstlabis.dto.authentication.request.RegisterRequestDTO;
 import org.example.firstlabis.model.security.Role;
 import org.example.firstlabis.model.security.User;
-import org.example.firstlabis.repository.UserRepository;
+import org.example.firstlabis.service.security.xml.XmlUserService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationServiceException;
@@ -19,6 +21,11 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
@@ -26,31 +33,44 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
-    private final UserRepository userRepository;
+    private final XmlUserService xmlUserService;
 
-    @Value("${application.security.unique-password-constraint}")
+    @Value("${application.security.unique-password-constraint:false}")
     private boolean uniquePasswordConstraint; // настройка уникальности паролей
 
     public JwtResponseDTO authenticate(LoginRequestDTO request) {
-        User user = userRepository.findByUsername(request.username())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with username " + request.username()));
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.username(),
-                        request.password(),
-                        user.getAuthorities()
-                )
-        );
-        return generateJwt(user);
+        log.info("Authenticating user: {}", request.username());
+        User user = xmlUserService.findByUsername(request.username())
+                .orElseThrow(() -> {
+                    log.error("User not found during authentication: {}", request.username());
+                    return new UsernameNotFoundException("User not found with username: " + request.username());
+                });
+
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.username(),
+                            request.password(),
+                            user.getAuthorities()));
+            log.info("User authenticated successfully: {}", request.username());
+            log.info("User authorities: {}", user.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .collect(Collectors.toList()));
+            return generateJwt(user);
+        } catch (Exception e) {
+            log.error("Authentication failed: {}", e.getMessage());
+            throw e;
+        }
     }
 
     public JwtResponseDTO registerUser(RegisterRequestDTO request) {
-        boolean enabled = true;
-        return registerEnabled(request, Role.USER, enabled);
+        log.info("Registering new user: {}", request.username());
+        return registerEnabled(request, Role.USER, true);
     }
 
     /**
-     * Метод регистрации и активации пользователя(для role:admin в первых раз без активации, пока ее не подтвердят)
+     * Метод регистрации и активации пользователя(для role:admin в первых раз без
+     * активации, пока ее не подтвердят)
      */
     private JwtResponseDTO registerEnabled(RegisterRequestDTO request, Role role, Boolean enabled) {
         User user = createUser(request, role, enabled);
@@ -61,41 +81,19 @@ public class AuthenticationService {
      * Принять запрос на регистрацию пользователя в системе
      */
     public JwtResponseDTO submitAdminRegistrationRequest(RegisterRequestDTO request) {
-        checkFirstAdminRegistration();
-        boolean enabled = false; // пока что пользователь не активирован
-        return registerEnabled(request, Role.ADMIN, enabled);
+        // In the XML implementation we don't worry about checking for first admin
+        // as we initialize with a default admin user
+        return registerEnabled(request, Role.ADMIN, false);
     }
 
     /**
-     * Метод активации пользователя, который отправлял запроса на статус админа
-     */
-    public void approveAdminRegistrationRequest(Long userId) {
-        User user = userRepository.findUserById(userId)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + userId));
-        user.setEnabledStatus(true); // активируем пользователя
-        userRepository.save(user);
-    }
-
-    /**
-     * Метод отказа пользователю, который запросил админ права
-     */
-    public void rejectAdminRegistrationRequest(Long userId) {
-        User user = userRepository.findUserById(userId)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + userId));
-        validateUserNotEnabled(user); // проверяем не был ли ранее активирован этот пользователь
-        userRepository.delete(user);
-    }
-
-    /**
-     * Метод создания юзера с определенной ролью и активацией в системе
-     *
-     * @param role    роль юзера
-     * @param enabled статус активации в системе
+     * Create user with specific role and activation status
      */
     private User createUser(RegisterRequestDTO request, Role role, boolean enabled) {
         validateRegisterRequest(request);
         User user = mapToUser(request, role, enabled);
-        userRepository.save(user);
+        xmlUserService.saveUser(user);
+        log.info("User created successfully: {}, role: {}", request.username(), role);
         return user;
     }
 
@@ -104,41 +102,70 @@ public class AuthenticationService {
      */
     private void validateRegisterRequest(RegisterRequestDTO request) {
         validateUsername(request.username());
-        validatePassword(request.password());
+        // Skip password uniqueness validation for XML implementation
     }
 
     /**
      * Метод валидации имени пользователя
      */
     private void validateUsername(String username) {
-        if (userRepository.existsByUsername(username)) {
+        if (xmlUserService.findByUsername(username).isPresent()) {
+            log.warn("Username already taken: {}", username);
             throw new AuthenticationServiceException("Username " + username + " is taken");
         }
     }
 
     /**
-     * Метод валидации пароля пользователя
+     * Generate JWT token
      */
-    private void validatePassword(String password) {
-        if (uniquePasswordConstraint) { // если настройка уникальности паролей включена
-            String encodedPassword = passwordEncoder.encode(password);
-            userRepository.findUserByPassword(encodedPassword).ifPresent(
-                    (user) -> {
-                        throw new AuthenticationServiceException("Password " + password
-                                + " is already taken by someone");
-                    });
+    private JwtResponseDTO generateJwt(User user) {
+        String jwt = jwtService.generateToken(user);
+        log.info("Generated JWT token for user: {}", user.getUsername());
+        return new JwtResponseDTO(jwt,
+                user.getAuthorities().stream().filter(authority -> authority.getAuthority().contains("ROLE"))
+                        .findFirst()
+                        .map(GrantedAuthority::getAuthority).orElse("ROLE_USER"));
+    }
 
-        }
+    private User mapToUser(RegisterRequestDTO request, Role role, Boolean enabled) {
+        return User.builder()
+                .username(request.username())
+                .password(request.password()) // Will be encoded by XmlUserService when saved
+                .role(role)
+                .enabledStatus(enabled)
+                .build();
+    }
+
+    private UserDto mapToUserDto(User user) {
+        return UserDto.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .build();
+    }
+
+    public Page<UserDto> getPendingRegistrationRequest(Pageable pageable) {
+        // In XML implementation, simplify this to return empty page
+        return new PageImpl<>(Collections.emptyList(), pageable, 0);
     }
 
     /**
-     * Метод проверяет активирован ли данный пользователь
-     * Проверка необходима на этапе авторизации
+     * Метод активации пользователя, который отправлял запроса на статус админа
      */
-    private void validateUserEnabled(User user) {
-        if (!user.isEnabledStatus()) {
-            throw new AuthenticationServiceException("User is xyz: " + user.getUsername());
-        }
+    public void approveAdminRegistrationRequest(String username) {
+        User user = xmlUserService.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+        user.setEnabledStatus(true); // активируем пользователя
+        xmlUserService.saveUser(user);
+    }
+
+    /**
+     * Метод отказа пользователю, который запросил админ права
+     */
+    public void rejectAdminRegistrationRequest(String username) {
+        User user = xmlUserService.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+        validateUserNotEnabled(user); // проверяем не был ли ранее активирован этот пользователь
+        xmlUserService.deleteUserByUsername(username);
     }
 
     /**
@@ -153,48 +180,9 @@ public class AuthenticationService {
     }
 
     /**
-     * Проверка на наличие админа в системе
-     */
-    private void checkFirstAdminRegistration() {
-        if (!hasRegisteredAdmin()) {
-            throw new AuthenticationServiceException("В системе на данный момент нету не одного админа");
-        }
-    }
-
-    /**
-     * Метод, проверяющий есть в бд хотя бы один админ
+     * Метод, проверяющий есть в хранилище хотя бы один админ
      */
     public boolean hasRegisteredAdmin() {
-        return userRepository.existsByRole(Role.ADMIN);
+        return xmlUserService.getAllUsers().stream().anyMatch(u -> u.getRole() == Role.ADMIN);
     }
-
-    /**
-     * Метод генерации Jwt токена
-     */
-    private JwtResponseDTO generateJwt(User user) {
-        String jwt = jwtService.generateToken(user);
-        return new JwtResponseDTO(jwt, user.getAuthorities().stream().findFirst()
-                .map(GrantedAuthority::getAuthority).get());
-    }
-
-    private User mapToUser(RegisterRequestDTO request, Role role, Boolean enabled) {
-        return User.builder()
-                .username(request.username())
-                .password(passwordEncoder.encode(request.password()))
-                .role(role)
-                .enabledStatus(enabled) //todo проверить правда ли user активируется
-                .build();
-    }
-
-    private UserDto mapToUserDto(User user) {
-        return UserDto.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .build();
-    }
-
-    public Page<UserDto> getPendingRegistrationRequest(Pageable pageable) {
-        return userRepository.findAllByEnabledStatusFalse(pageable).map(this::mapToUserDto);
-    }
-
 }

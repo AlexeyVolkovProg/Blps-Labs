@@ -41,14 +41,12 @@ public class VideoController {
     }
 
     @GetMapping("/for-review")
-    @PreAuthorize("hasAnyAuthority('ADMIN')")
     public ResponseEntity<List<VideoReviewResponseDTO>> getVideosForReview() {
         List<VideoReviewResponseDTO> videos = videoService.getVideosForReview();
         return new ResponseEntity<>(videos, HttpStatus.OK);
     }
 
     @PostMapping("/{videoId}/moderate")
-    @PreAuthorize("hasAnyAuthority('ADMIN')")
     public ResponseEntity<Void> moderateVideo(@PathVariable UUID videoId,
                                               @RequestParam boolean approve,
                                               @RequestParam BlockReason blockReason) {

@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.example.firstlabis.model.security.User;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -30,15 +29,13 @@ public abstract class TrackEntity {
     @Column(name = "last_modify_date", insertable = false)
     private LocalDateTime lastModifyDate;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner", nullable = false, updatable = false)
+    @Column(name = "owner_username", nullable = false, updatable = false)
     @CreatedBy
-    private User owner;
+    private String ownerUsername;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "last_modify_user")
+    @Column(name = "last_modify_username")
     @LastModifiedBy
-    private User lastModifyUser;
+    private String lastModifyUsername;
 
     @Column(name = "edit_admin_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
     private boolean editAdminStatus = false;

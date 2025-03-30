@@ -29,8 +29,8 @@ public class AuthenticationAdminController {
     @PostMapping("/registration-requests/{userId}")
     @PreAuthorize("@userSecurityService.isEnabled()")
     public ResponseEntity<Void> approveAdminRegistrationRequest(
-            @Parameter(description = "ID of the user to approve") @PathVariable Long userId) {
-        authenticationService.approveAdminRegistrationRequest(userId);
+            @Parameter(description = "Username of the user to approve") @PathVariable String username) {
+        authenticationService.approveAdminRegistrationRequest(username);
         return ResponseEntity.ok().build();
     }
 
@@ -42,8 +42,8 @@ public class AuthenticationAdminController {
     @PreAuthorize("@userSecurityService.isEnabled()")
     @DeleteMapping("/registration-requests/{userId}")
     public ResponseEntity<Void> rejectAdminRegistrationRequest(
-            @Parameter(description = "ID of the user to reject") @PathVariable Long userId) {
-        authenticationService.rejectAdminRegistrationRequest(userId);
+            @Parameter(description = "Username of the user to reject") @PathVariable String username) {
+        authenticationService.rejectAdminRegistrationRequest(username);
         return ResponseEntity.ok().build();
     }
 

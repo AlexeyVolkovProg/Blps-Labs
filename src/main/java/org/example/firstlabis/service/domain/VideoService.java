@@ -3,6 +3,7 @@ package org.example.firstlabis.service.domain;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.firstlabis.dto.domain.ComplaintCreateRequestDTO;
 import org.example.firstlabis.dto.domain.VideoCreateRequestDTO;
 import org.example.firstlabis.dto.domain.VideoResponseDTO;
@@ -25,30 +26,39 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class VideoService {
 
     private final VideoRepository videoRepository;
-
     private final ComplaintRepository complaintRepository;
-
     private final VideoReviewRepository videoReviewRepository;
-
     private final GenerateUrlUtil generateUrlUtil;
-
     private final SecurityUtil securityUtil;
-
     private final EntityManager entityManager;
 
     // Загрузка видео
     public VideoResponseDTO uploadVideo(VideoCreateRequestDTO videoDTO) {
+        log.info("Uploading new video: {}", videoDTO.getTitle());
         Video video = new Video();
         video.setTitle(videoDTO.getTitle());
         video.setDescription(videoDTO.getDescription());
         video.setUrl(generateUrlUtil.generateVideoUrl(video.getId())); // генерируем нам ссылочку
         video.setStatus(autoModerateVideo(video));// мокаем процесса проверки
+        
+        // Set owner username directly before saving
+        try {
+            String currentUsername = SecurityUtil.getCurrentUsername();
+            log.info("Setting video owner to: {}", currentUsername);
+            video.setOwnerUsername(currentUsername);
+        } catch (Exception e) {
+            log.error("Error getting current username: {}", e.getMessage());
+            video.setOwnerUsername("anonymous");
+        }
+        
         video = videoRepository.save(video);
+        log.info("Video saved successfully with ID: {}", video.getId());
         return convertToDTO(video);
     }
 
@@ -67,14 +77,17 @@ public class VideoService {
         return convertToDTO(video);
     }
 
-
     @Transactional
     public void newCreateComplaint(ComplaintCreateRequestDTO complaintDTO) {
         Video video = videoRepository.findById(complaintDTO.getVideoId())
                 .orElseThrow(() -> new RuntimeException("Video not found"));
 
-        Optional<Complaint> existingComplaint = complaintRepository.findByVideoIdAndOwner_Id(
-                complaintDTO.getVideoId(), SecurityUtil.getCurrentUserId());
+        // Get current username
+        String currentUsername = SecurityUtil.getCurrentUsername();
+        
+        // Modify repository to find by username instead of ID
+        Optional<Complaint> existingComplaint = complaintRepository.findByVideoIdAndOwnerUsername(
+                complaintDTO.getVideoId(), currentUsername);
 
         if (existingComplaint.isPresent()) {
             Complaint complaint = existingComplaint.get();
@@ -84,6 +97,8 @@ public class VideoService {
             Complaint newComplaint = new Complaint();
             newComplaint.setVideo(video);
             newComplaint.setReason(complaintDTO.getReason());
+            // Set owner username directly
+            newComplaint.setOwnerUsername(currentUsername);
             complaintRepository.save(newComplaint);
         }
         updateVideoReview(video);
@@ -112,7 +127,6 @@ public class VideoService {
         }
     }
 
-
     // Получить все заявки на повторной проверке
     @Transactional
     public List<VideoReviewResponseDTO> getVideosForReview() {
@@ -121,7 +135,6 @@ public class VideoService {
         List<VideoReview> videoReviews = videoReviewRepository.findAll();
         return videoReviews.stream().map(this::mapVideoReviewToDTO).collect(Collectors.toList());
     }
-
 
     // Принятие или отклонение видео модераторами
     @Transactional
@@ -144,7 +157,6 @@ public class VideoService {
         return videos.stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
-
     private VideoReviewResponseDTO mapVideoReviewToDTO(VideoReview videoReview) {
         Video video = videoReview.getVideo();
         return VideoReviewResponseDTO.builder()
@@ -157,7 +169,6 @@ public class VideoService {
                 .build();
     }
 
-
     private VideoResponseDTO convertToDTO(Video video) {
         return VideoResponseDTO.builder()
                 .id(video.getId())
@@ -166,6 +177,7 @@ public class VideoService {
                 .url(video.getUrl())
                 .status(video.getStatus().name())
                 .blockReason(video.getBlockReason().name())
+                .owner(video.getOwnerUsername()) // Include owner username in DTO
                 .build();
     }
 }

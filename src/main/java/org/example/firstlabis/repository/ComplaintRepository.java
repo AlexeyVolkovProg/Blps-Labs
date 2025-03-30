@@ -13,6 +13,6 @@ import java.util.UUID;
 public interface ComplaintRepository extends JpaRepository<Complaint, UUID> {
     long countByVideoIdAndReason(UUID videoId, BlockReason reason);
     void deleteAllByVideoId(UUID videoId);
-    Optional<Complaint> findByVideoIdAndOwner_Id(UUID videoId, Long ownerId);
+    Optional<Complaint> findByVideoIdAndOwnerUsername(UUID videoId, String ownerUsername);
     List<Complaint> findByVideoId(UUID videoId);
 }
