@@ -13,6 +13,11 @@ public enum Role {
             Privilege.CREATE_COMPLAINT,
             Privilege.CREATE_VIDEO
     )),
+    UNAPPROVED_ADMIN(Set.of(
+            Privilege.VIEW_VIDEO,
+            Privilege.CREATE_COMPLAINT,
+            Privilege.CREATE_VIDEO
+    )),
     ADMIN(Set.of(
             Privilege.VIEW_VIDEO,
             Privilege.CREATE_COMPLAINT,

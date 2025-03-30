@@ -54,15 +54,25 @@ public class XmlUserService implements UserDetailsService {
      * Сохранить нового пользователя в XML-файл.
      */
     public User saveUser(User user) {
-        // Encode password
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        // Get existing user if present
+        Optional<User> existingUser = findByUsername(user.getUsername());
+        
+        // Only encode password for new users
+        if (existingUser.isEmpty()) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        } else {
+            user.setPassword(existingUser.get().getPassword());
+        }
         
         // Get all existing users
         XmlUsers xmlUsers = loadUsersFromXml();
         
         // Remove user if already exists
-        xmlUsers.getUsers().removeIf(existingUser -> 
-                existingUser.getUsername().equals(user.getUsername()));
+        if (existingUser.isPresent()) {
+            xmlUsers.getUsers().removeIf(u -> 
+                u.getUsername().equals(user.getUsername()));  
+        }
+        
         
         // Add new user
         xmlUsers.getUsers().add(XmlUser.fromUser(user));

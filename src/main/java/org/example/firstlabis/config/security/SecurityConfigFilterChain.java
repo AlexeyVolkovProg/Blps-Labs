@@ -32,12 +32,12 @@ public class SecurityConfigFilterChain {
             "/test/**",
             "/app.js"
     };
-    
+
     private final AuthenticationManager authenticationManager;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    
-    public SecurityConfigFilterChain(@Lazy AuthenticationManager authenticationManager, 
-                                     JwtAuthenticationFilter jwtAuthenticationFilter) {
+
+    public SecurityConfigFilterChain(@Lazy AuthenticationManager authenticationManager,
+            JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.authenticationManager = authenticationManager;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
@@ -57,43 +57,36 @@ public class SecurityConfigFilterChain {
                 .authorizeHttpRequests(authorize -> authorize
                         // Public endpoints
                         .requestMatchers(WHITE_LIST_URL).permitAll()
-                        
-                        // Admin-only endpoints + give admins access to all other endpoints
+
+                        // Admin-only endpoints
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        
+
                         // Video review privilege (GET /api/videos/for-review)
                         .requestMatchers(HttpMethod.GET, "/api/videos/for-review").hasAnyAuthority(
-                            Privilege.REVIEW_VIDEO.name(), "ROLE_ADMIN"
-                        )
-                        
+                                Privilege.REVIEW_VIDEO.name())
+
                         // Video moderation (POST /api/videos/{videoId}/moderate)
                         .requestMatchers(HttpMethod.POST, "/api/videos/*/moderate").hasAnyAuthority(
-                            Privilege.REVIEW_VIDEO.name(), "ROLE_ADMIN"
-                        )
-                        
+                                Privilege.REVIEW_VIDEO.name())
+
                         // Video creation (POST /api/videos)
                         .requestMatchers(HttpMethod.POST, "/api/videos").hasAnyAuthority(
-                            Privilege.CREATE_VIDEO.name(), "ROLE_ADMIN"
-                        )
-                        
+                                Privilege.CREATE_VIDEO.name())
+
                         // Get specific video (GET /api/videos/{videoId})
                         .requestMatchers(HttpMethod.GET, "/api/videos/*").hasAnyAuthority(
-                            Privilege.VIEW_VIDEO.name(), "ROLE_ADMIN"
-                        )
-                        
+                                Privilege.VIEW_VIDEO.name())
+
                         // Get approved/rejected videos (GET /api/videos/approved-rejected)
                         .requestMatchers(HttpMethod.GET, "/api/videos/approved-rejected").hasAnyAuthority(
-                            Privilege.VIEW_VIDEO.name(), "ROLE_ADMIN"
-                        )
-                        
+                                Privilege.VIEW_VIDEO.name())
+
                         // Create complaint (POST /api/videos/complaints)
                         .requestMatchers(HttpMethod.POST, "/api/videos/complaints").hasAnyAuthority(
-                            Privilege.CREATE_COMPLAINT.name(), "ROLE_ADMIN"
-                        )
-                        
+                                Privilege.CREATE_COMPLAINT.name())
+
                         // All other requests need authentication
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationManager(authenticationManager)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

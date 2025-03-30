@@ -65,15 +65,15 @@ public class AuthenticationService {
 
     public JwtResponseDTO registerUser(RegisterRequestDTO request) {
         log.info("Registering new user: {}", request.username());
-        return registerEnabled(request, Role.USER, true);
+        return registerWithRole(request, Role.USER);
     }
 
     /**
      * Метод регистрации и активации пользователя(для role:admin в первых раз без
      * активации, пока ее не подтвердят)
      */
-    private JwtResponseDTO registerEnabled(RegisterRequestDTO request, Role role, Boolean enabled) {
-        User user = createUser(request, role, enabled);
+    private JwtResponseDTO registerWithRole(RegisterRequestDTO request, Role role) {
+        User user = createUser(request, role);
         return generateJwt(user);
     }
 
@@ -81,17 +81,16 @@ public class AuthenticationService {
      * Принять запрос на регистрацию пользователя в системе
      */
     public JwtResponseDTO submitAdminRegistrationRequest(RegisterRequestDTO request) {
-        // In the XML implementation we don't worry about checking for first admin
-        // as we initialize with a default admin user
-        return registerEnabled(request, Role.ADMIN, false);
+        log.info("Submitting admin registration request for: {}", request.username());
+        return registerWithRole(request, Role.UNAPPROVED_ADMIN);
     }
 
     /**
-     * Create user with specific role and activation status
+     * Create user with specific role
      */
-    private User createUser(RegisterRequestDTO request, Role role, boolean enabled) {
+    private User createUser(RegisterRequestDTO request, Role role) {
         validateRegisterRequest(request);
-        User user = mapToUser(request, role, enabled);
+        User user = mapToUser(request, role);
         xmlUserService.saveUser(user);
         log.info("User created successfully: {}, role: {}", request.username(), role);
         return user;
@@ -127,12 +126,12 @@ public class AuthenticationService {
                         .map(GrantedAuthority::getAuthority).orElse("ROLE_USER"));
     }
 
-    private User mapToUser(RegisterRequestDTO request, Role role, Boolean enabled) {
+    private User mapToUser(RegisterRequestDTO request, Role role) {
         return User.builder()
                 .username(request.username())
                 .password(request.password()) // Will be encoded by XmlUserService when saved
                 .role(role)
-                .enabledStatus(enabled)
+                .enabledStatus(true) // Always set to true now that we use roles for approval
                 .build();
     }
 
@@ -140,12 +139,37 @@ public class AuthenticationService {
         return UserDto.builder()
                 .id(user.getId())
                 .username(user.getUsername())
+                .role(user.getRole().name())
                 .build();
     }
 
+    /**
+     * Получить список пользователей с ролью UNAPPROVED_ADMIN
+     */
+    public List<UserDto> getPendingAdminApprovals() {
+        return xmlUserService.getAllUsers().stream()
+                .filter(user -> user.getRole() == Role.UNAPPROVED_ADMIN)
+                .map(this::mapToUserDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Получить пагинированый список заявок на апрув админов
+     */
     public Page<UserDto> getPendingRegistrationRequest(Pageable pageable) {
-        // In XML implementation, simplify this to return empty page
-        return new PageImpl<>(Collections.emptyList(), pageable, 0);
+        List<UserDto> pendingAdmins = getPendingAdminApprovals();
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), pendingAdmins.size());
+        
+        if (start > pendingAdmins.size()) {
+            return new PageImpl<>(Collections.emptyList(), pageable, pendingAdmins.size());
+        }
+        
+        return new PageImpl<>(
+            pendingAdmins.subList(start, end), 
+            pageable, 
+            pendingAdmins.size()
+        );
     }
 
     /**
@@ -154,8 +178,14 @@ public class AuthenticationService {
     public void approveAdminRegistrationRequest(String username) {
         User user = xmlUserService.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
-        user.setEnabledStatus(true); // активируем пользователя
+        
+        if (user.getRole() != Role.UNAPPROVED_ADMIN) {
+            throw new AuthenticationServiceException("User " + username + " is not pending admin approval");
+        }
+        
+        user.setRole(Role.ADMIN);
         xmlUserService.saveUser(user);
+        log.info("Admin approved: {}", username);
     }
 
     /**
@@ -164,19 +194,13 @@ public class AuthenticationService {
     public void rejectAdminRegistrationRequest(String username) {
         User user = xmlUserService.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
-        validateUserNotEnabled(user); // проверяем не был ли ранее активирован этот пользователь
-        xmlUserService.deleteUserByUsername(username);
-    }
-
-    /**
-     * Метод проверяет не активирован ли пользователь
-     * Если активирован, то выкинет исключение
-     * Необходим для проверок при попытках удалить действующих администраторов
-     */
-    private void validateUserNotEnabled(User user) {
-        if (user.isEnabledStatus()) {
-            throw new AuthenticationServiceException("Cannot delete an enabled user");
+        
+        if (user.getRole() != Role.UNAPPROVED_ADMIN) {
+            throw new AuthenticationServiceException("User " + username + " is not pending admin approval");
         }
+        
+        xmlUserService.deleteUserByUsername(username);
+        log.info("Admin request rejected and user deleted: {}", username);
     }
 
     /**
