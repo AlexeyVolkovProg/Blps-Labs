@@ -1,13 +1,8 @@
 package org.example.firstlabis.controller.authentication;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import lombok.RequiredArgsConstructor;
-import org.example.firstlabis.dto.authentication.response.JwtResponseDTO;
 import org.example.firstlabis.dto.authentication.request.LoginRequestDTO;
 import org.example.firstlabis.dto.authentication.request.RegisterRequestDTO;
+import org.example.firstlabis.dto.authentication.response.JwtResponseDTO;
 import org.example.firstlabis.service.security.jwt.AuthenticationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +10,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -50,7 +51,6 @@ public class AuthenticationController {
     /**
      * Принимаем запрос на регистрацию нового администратора
      */
-
     @Operation(summary = "Request registration for a new admin")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "202", description = "Admin registration request submitted"),

@@ -1,21 +1,34 @@
 package org.example.firstlabis.config.security.jaas;
 
-import lombok.extern.slf4j.Slf4j;
+import java.io.IOException;
+import java.util.Map;
+import java.util.Optional;
+
+import javax.security.auth.Subject;
+import javax.security.auth.callback.Callback;
+import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.callback.NameCallback;
+import javax.security.auth.callback.PasswordCallback;
+import javax.security.auth.callback.UnsupportedCallbackException;
+import javax.security.auth.login.LoginException;
+import javax.security.auth.spi.LoginModule;
+
 import org.example.firstlabis.model.security.User;
 import org.example.firstlabis.service.security.xml.XmlUserService;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import javax.security.auth.Subject;
-import javax.security.auth.callback.*;
-import javax.security.auth.login.LoginException;
-import javax.security.auth.spi.LoginModule;
-import java.io.IOException;
-import java.util.Map;
-import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Реализация JAAS LoginModule для аутентификации юзеров через XML.
+ * 
+ * XmlUserLoginModule - основной модуль аутентификации JAAS, который:
+ * - Проверяет учетные данные пользователя
+ * - Создает UserPrincipal, RolePrincipal и PrivilegePrincipal
+ * - Добавляет их в Subject после успешной аутентификации
+ * 
+ * @author amphyxs
  */
 @Slf4j
 public class XmlUserLoginModule implements LoginModule {
@@ -27,7 +40,6 @@ public class XmlUserLoginModule implements LoginModule {
     private String username;
     private UserPrincipal userPrincipal;
     
-    // Services
     private XmlUserService xmlUserService;
     private PasswordEncoder passwordEncoder;
 
@@ -36,7 +48,6 @@ public class XmlUserLoginModule implements LoginModule {
         this.subject = subject;
         this.callbackHandler = callbackHandler;
         
-        // Get services from Spring context
         this.xmlUserService = JaasSpringContext.getBean(XmlUserService.class);
         this.passwordEncoder = JaasSpringContext.getBean(PasswordEncoder.class);
     }

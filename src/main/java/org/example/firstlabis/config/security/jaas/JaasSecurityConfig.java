@@ -1,5 +1,13 @@
 package org.example.firstlabis.config.security.jaas;
 
+import java.security.Principal;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import javax.security.auth.login.AppConfigurationEntry;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -7,22 +15,21 @@ import org.springframework.security.authentication.jaas.AuthorityGranter;
 import org.springframework.security.authentication.jaas.DefaultJaasAuthenticationProvider;
 import org.springframework.security.authentication.jaas.memory.InMemoryConfiguration;
 
-import javax.security.auth.login.AppConfigurationEntry;
-import java.security.Principal;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
 /**
  * Конфигурация для интеграции JAAS со Spring Security.
+ * 
+ * - Настраивает LoginModule
+ * - Определяет AuthorityGranter для преобразования JAAS principals в роли Spring Security
+ *
+ * @author amphyxs
  */
 @Configuration
 public class JaasSecurityConfig {
 
     /**
-     * Creates a JAAS Configuration that defines our XML authentication
-     * @return JAAS Configuration
+     * Создает конфигурацию JAAS, которая определяет нашу XML-аутентификацию.
+     * 
+     * @return Конфигурация JAAS
      */
     @Bean
     public javax.security.auth.login.Configuration jaasConfiguration() {
@@ -42,7 +49,8 @@ public class JaasSecurityConfig {
     }
 
     /**
-     * Creates a JAAS Authentication Provider to work with Spring Security
+     * Создает JAAS провайдер аутентификации для работы со Spring Security.
+     * 
      * @return DefaultJaasAuthenticationProvider
      */
     @Bean
@@ -56,7 +64,7 @@ public class JaasSecurityConfig {
     }
 
     /**
-     * Authority granter that converts JAAS principals to Spring Security authorities
+     * Преобразователь прав доступа, который конвертирует JAAS principals в роли Spring Security.
      */
     private static class JaasAuthorityGranter implements AuthorityGranter {
         @Override

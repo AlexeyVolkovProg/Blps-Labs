@@ -1,10 +1,8 @@
 package org.example.firstlabis.filter;
 
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
 import org.example.firstlabis.service.security.jwt.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -16,7 +14,10 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.IOException;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -31,7 +32,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.applicationContext = applicationContext;
     }
 
-    // Lazy loading of UserDetailsService to break circular dependency
+    // Ленивая загрузка UserDetailsService для предотвращения циклической зависимости
     private UserDetailsService getUserDetailsService() {
         if (userDetailsService == null) {
             userDetailsService = applicationContext.getBean(UserDetailsService.class);

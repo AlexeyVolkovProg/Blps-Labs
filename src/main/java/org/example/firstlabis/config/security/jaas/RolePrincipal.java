@@ -1,12 +1,14 @@
 package org.example.firstlabis.config.security.jaas;
 
+import java.security.Principal;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.security.Principal;
-
 /**
  * Principal для роли.
+ * 
+ * @author amphyxs
  */
 @Getter
 @AllArgsConstructor

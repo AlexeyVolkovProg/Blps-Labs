@@ -1,7 +1,5 @@
 package org.example.firstlabis.initializer;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.example.firstlabis.model.security.Role;
 import org.example.firstlabis.model.security.User;
 import org.example.firstlabis.service.security.xml.XmlUserService;
@@ -9,8 +7,13 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Инициализатор дефолтных пользователей при запуске приложения.
+ * 
+ * @author amphyxs
  */
 @Slf4j
 @Configuration

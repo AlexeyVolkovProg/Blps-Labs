@@ -1,10 +1,13 @@
 package org.example.firstlabis.service.security.xml;
 
-import jakarta.xml.bind.JAXBContext;
-import jakarta.xml.bind.JAXBException;
-import jakarta.xml.bind.Marshaller;
-import jakarta.xml.bind.Unmarshaller;
-import lombok.extern.slf4j.Slf4j;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.example.firstlabis.model.security.User;
 import org.example.firstlabis.model.security.XmlUser;
 import org.example.firstlabis.model.security.XmlUsers;
@@ -16,16 +19,16 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Marshaller;
+import jakarta.xml.bind.Unmarshaller;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Spring-сервис для обработки пользователей в XML-файлах.
+ * 
+ * @author amphyxs.
  */
 @Slf4j
 @Service
@@ -54,30 +57,24 @@ public class XmlUserService implements UserDetailsService {
      * Сохранить нового пользователя в XML-файл.
      */
     public User saveUser(User user) {
-        // Get existing user if present
         Optional<User> existingUser = findByUsername(user.getUsername());
         
-        // Only encode password for new users
         if (existingUser.isEmpty()) {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
         } else {
             user.setPassword(existingUser.get().getPassword());
         }
         
-        // Get all existing users
         XmlUsers xmlUsers = loadUsersFromXml();
         
-        // Remove user if already exists
         if (existingUser.isPresent()) {
             xmlUsers.getUsers().removeIf(u -> 
                 u.getUsername().equals(user.getUsername()));  
         }
         
-        
-        // Add new user
+
         xmlUsers.getUsers().add(XmlUser.fromUser(user));
         
-        // Save to XML
         saveUsersToXml(xmlUsers);
         
         return user;
@@ -91,15 +88,13 @@ public class XmlUserService implements UserDetailsService {
     public boolean deleteUserByUsername(String username) {
         XmlUsers xmlUsers = loadUsersFromXml();
         int initialSize = xmlUsers.getUsers().size();
-        
-        // Remove user if exists
+
         xmlUsers.getUsers().removeIf(existingUser -> 
                 existingUser.getUsername().equals(username));
         
         boolean removed = xmlUsers.getUsers().size() < initialSize;
         
         if (removed) {
-            // Save updated XML
             saveUsersToXml(xmlUsers);
             log.info("User deleted: {}", username);
         } else {
@@ -125,7 +120,6 @@ public class XmlUserService implements UserDetailsService {
 
     private XmlUsers loadUsersFromXml() {
         try {
-            // Create initial file if it doesn't exist
             if (!XML_FILE.exists()) {
                 XML_FILE.createNewFile();
                 saveUsersToXml(new XmlUsers());
