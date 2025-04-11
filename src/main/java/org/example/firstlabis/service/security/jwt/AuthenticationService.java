@@ -32,8 +32,8 @@ public class AuthenticationService {
 
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
-    private final PasswordEncoder passwordEncoder;
     private final XmlUserService xmlUserService;
+
 
     @Value("${application.security.unique-password-constraint:false}")
     private boolean uniquePasswordConstraint; // настройка уникальности паролей

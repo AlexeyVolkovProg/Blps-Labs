@@ -26,6 +26,12 @@
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.jboss.narayana.jta</groupId>
+            <artifactId>narayana-jta</artifactId>
+            <version>7.2.1.Final</version>
+        </dependency>
+
         <!-- https://mvnrepository.com/artifact/io.awspring.cloud/spring-cloud-aws-starter -->
         <dependency>
             <groupId>io.awspring.cloud</groupId>

@@ -1,6 +1,5 @@
 package org.example.firstlabis.config.security;
 
-import lombok.RequiredArgsConstructor;
 import org.example.firstlabis.filter.JwtAuthenticationFilter;
 import org.example.firstlabis.model.security.Privilege;
 import org.springframework.context.annotation.Bean;

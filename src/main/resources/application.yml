@@ -9,13 +9,18 @@ spring:
 
   jpa:
     generate-ddl: ${SPRING_JPA_GENERATE_DDL:true}
-    jdbc:
-      batch-writing: jdbc # Включить пакетную запись
-      batch-writing.size: 50 # Размер батча (количество записей на операцию)
     hibernate:
       ddl-auto: update
     show-sql: ${SPRING_JPA_SHOW_SQL:false}
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      transaction:
+        coordinator_class: jta
+        jta:
+          platform: org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform
+
+  jta:
+    enabled: true
 
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/postgres}
@@ -46,6 +51,9 @@ logging:
     org.zalando.logbook: TRACE
     org.springframework.orm.jpa: DEBUG
     org.springframework.transaction: DEBUG
+    org.jboss.narayana: DEBUG
+    com.arjuna: DEBUG
+
 
 admin: # логин и пароль главного админа, который изначально есть в системе
   username: admin_main

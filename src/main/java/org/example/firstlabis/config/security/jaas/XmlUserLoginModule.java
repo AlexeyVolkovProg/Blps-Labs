@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Реалзиация JAAS LoginModule для аутентификации юзеров через XML.
+ * Реализация JAAS LoginModule для аутентификации юзеров через XML.
  */
 @Slf4j
 public class XmlUserLoginModule implements LoginModule {

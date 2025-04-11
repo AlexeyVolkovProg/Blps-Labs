@@ -1,7 +1,10 @@
 package org.example.firstlabis.service.domain;
 
 import jakarta.persistence.EntityManager;
-import jakarta.transaction.Transactional;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.SynchronizationType;
+import jakarta.transaction.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.firstlabis.dto.domain.ComplaintCreateRequestDTO;
@@ -31,12 +34,14 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class VideoService {
 
+    private final EntityManager entityManager;
+    private final EntityManagerFactory entityManagerFactory;
     private final VideoRepository videoRepository;
     private final ComplaintRepository complaintRepository;
     private final VideoReviewRepository videoReviewRepository;
     private final GenerateUrlUtil generateUrlUtil;
-    private final SecurityUtil securityUtil;
-    private final EntityManager entityManager;
+    private final UserTransaction userTransaction;
+
 
     // Загрузка видео
     public VideoResponseDTO uploadVideo(VideoCreateRequestDTO videoDTO) {
@@ -46,7 +51,7 @@ public class VideoService {
         video.setDescription(videoDTO.getDescription());
         video.setUrl(generateUrlUtil.generateVideoUrl(video.getId())); // генерируем нам ссылочку
         video.setStatus(autoModerateVideo(video));// мокаем процесса проверки
-        
+
         // Set owner username directly before saving
         try {
             String currentUsername = SecurityUtil.getCurrentUsername();
@@ -56,7 +61,7 @@ public class VideoService {
             log.error("Error getting current username: {}", e.getMessage());
             video.setOwnerUsername("anonymous");
         }
-        
+
         video = videoRepository.save(video);
         log.info("Video saved successfully with ID: {}", video.getId());
         return convertToDTO(video);
@@ -84,7 +89,7 @@ public class VideoService {
 
         // Get current username
         String currentUsername = SecurityUtil.getCurrentUsername();
-        
+
         // Modify repository to find by username instead of ID
         Optional<Complaint> existingComplaint = complaintRepository.findByVideoIdAndOwnerUsername(
                 complaintDTO.getVideoId(), currentUsername);
@@ -137,18 +142,31 @@ public class VideoService {
     }
 
     // Принятие или отклонение видео модераторами
-    @Transactional
+
     public void moderateVideo(UUID videoId, boolean approve, BlockReason blockReason) {
-        Video video = videoRepository.findById(videoId).orElseThrow(() -> new RuntimeException("Video not found"));
-        if (approve) {
-            video.setStatus(VideoStatus.APPROVED);
-            complaintRepository.deleteAllByVideoId(video.getId());
-            videoReviewRepository.deleteByVideoId(video.getId());
-        } else {
-            video.setStatus(VideoStatus.REJECTED);
-            video.setBlockReason(blockReason);
+        try {
+            userTransaction.begin();
+            EntityManager entityManager = entityManagerFactory.createEntityManager();
+            Video video = entityManager.find(Video.class, videoId);
+            if (approve) {
+                video.setStatus(VideoStatus.APPROVED);
+                complaintRepository.deleteAllByVideoId(video.getId());
+                videoReviewRepository.deleteByVideoId(video.getId());
+            } else {
+                video.setStatus(VideoStatus.REJECTED);
+                video.setBlockReason(blockReason);
+            }
+            entityManager.merge(video);
+            userTransaction.commit();
+        } catch (Exception e) {
+            try {
+                userTransaction.rollback();
+                log.warn("Transaction rolled back : {}", e.getMessage());
+            } catch (Exception rollbackEx) {
+                log.error("Rollback also failed: {}", rollbackEx.getMessage(), rollbackEx);
+            }
+            throw new RuntimeException("Transaction failed", e);
         }
-        videoRepository.save(video);
     }
 
     @Transactional
