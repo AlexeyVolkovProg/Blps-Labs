@@ -38,7 +38,6 @@ public class UserInitializer {
                 log.info("Created default admin user");
             }
             
-            // Create regular user if not exists
             if (xmlUserService.findByUsername("user").isEmpty()) {
                 User regularUser = User.builder()
                         .username("user")

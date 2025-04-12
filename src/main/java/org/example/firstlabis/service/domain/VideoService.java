@@ -1,12 +1,11 @@
 package org.example.firstlabis.service.domain;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.SynchronizationType;
-import jakarta.transaction.*;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
 import org.example.firstlabis.dto.domain.ComplaintCreateRequestDTO;
 import org.example.firstlabis.dto.domain.VideoCreateRequestDTO;
 import org.example.firstlabis.dto.domain.VideoResponseDTO;
@@ -23,11 +22,12 @@ import org.example.firstlabis.service.util.GenerateUrlUtil;
 import org.example.firstlabis.service.util.SecurityUtil;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.transaction.Transactional;
+import jakarta.transaction.UserTransaction;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -43,7 +43,6 @@ public class VideoService {
     private final UserTransaction userTransaction;
 
 
-    // Загрузка видео
     public VideoResponseDTO uploadVideo(VideoCreateRequestDTO videoDTO) {
         log.info("Uploading new video: {}", videoDTO.getTitle());
         Video video = new Video();
@@ -52,7 +51,6 @@ public class VideoService {
         video.setUrl(generateUrlUtil.generateVideoUrl(video.getId())); // генерируем нам ссылочку
         video.setStatus(autoModerateVideo(video));// мокаем процесса проверки
 
-        // Set owner username directly before saving
         try {
             String currentUsername = SecurityUtil.getCurrentUsername();
             log.info("Setting video owner to: {}", currentUsername);
@@ -87,10 +85,8 @@ public class VideoService {
         Video video = videoRepository.findById(complaintDTO.getVideoId())
                 .orElseThrow(() -> new RuntimeException("Video not found"));
 
-        // Get current username
         String currentUsername = SecurityUtil.getCurrentUsername();
 
-        // Modify repository to find by username instead of ID
         Optional<Complaint> existingComplaint = complaintRepository.findByVideoIdAndOwnerUsername(
                 complaintDTO.getVideoId(), currentUsername);
 
@@ -102,7 +98,6 @@ public class VideoService {
             Complaint newComplaint = new Complaint();
             newComplaint.setVideo(video);
             newComplaint.setReason(complaintDTO.getReason());
-            // Set owner username directly
             newComplaint.setOwnerUsername(currentUsername);
             complaintRepository.save(newComplaint);
         }
@@ -195,7 +190,7 @@ public class VideoService {
                 .url(video.getUrl())
                 .status(video.getStatus().name())
                 .blockReason(video.getBlockReason().name())
-                .owner(video.getOwnerUsername()) // Include owner username in DTO
+                .owner(video.getOwnerUsername())
                 .build();
     }
 }

@@ -54,37 +54,28 @@ public class SecurityConfigFilterChain {
                     return corsConfiguration;
                 }))
                 .authorizeHttpRequests(authorize -> authorize
-                        // Public endpoints
                         .requestMatchers(WHITE_LIST_URL).permitAll()
 
-                        // Admin-only endpoints
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-                        // Video review privilege (GET /api/videos/for-review)
                         .requestMatchers(HttpMethod.GET, "/api/videos/for-review").hasAnyAuthority(
                                 Privilege.REVIEW_VIDEO.name())
 
-                        // Video moderation (POST /api/videos/{videoId}/moderate)
                         .requestMatchers(HttpMethod.POST, "/api/videos/*/moderate").hasAnyAuthority(
                                 Privilege.REVIEW_VIDEO.name())
 
-                        // Video creation (POST /api/videos)
                         .requestMatchers(HttpMethod.POST, "/api/videos").hasAnyAuthority(
                                 Privilege.CREATE_VIDEO.name())
 
-                        // Get specific video (GET /api/videos/{videoId})
                         .requestMatchers(HttpMethod.GET, "/api/videos/*").hasAnyAuthority(
                                 Privilege.VIEW_VIDEO.name())
 
-                        // Get approved/rejected videos (GET /api/videos/approved-rejected)
                         .requestMatchers(HttpMethod.GET, "/api/videos/approved-rejected").hasAnyAuthority(
                                 Privilege.VIEW_VIDEO.name())
 
-                        // Create complaint (POST /api/videos/complaints)
                         .requestMatchers(HttpMethod.POST, "/api/videos/complaints").hasAnyAuthority(
                                 Privilege.CREATE_COMPLAINT.name())
 
-                        // All other requests need authentication
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationManager(authenticationManager)

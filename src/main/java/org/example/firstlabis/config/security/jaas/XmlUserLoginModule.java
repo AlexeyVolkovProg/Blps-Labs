@@ -63,7 +63,6 @@ public class XmlUserLoginModule implements LoginModule {
             username = ((NameCallback) callbacks[0]).getName();
             String password = new String(((PasswordCallback) callbacks[1]).getPassword());
 
-            // Authenticate user
             Optional<User> userOpt = xmlUserService.findByUsername(username);
             if (userOpt.isPresent() && passwordEncoder.matches(password, userOpt.get().getPassword())) {
                 User user = userOpt.get();
@@ -87,10 +86,8 @@ public class XmlUserLoginModule implements LoginModule {
         if (userPrincipal != null) {
             subject.getPrincipals().add(userPrincipal);
             
-            // Add role principal
             subject.getPrincipals().add(new RolePrincipal(userPrincipal.getUser().getRole().name()));
             
-            // Add privilege principals
             userPrincipal.getUser().getRole().getPrivileges().forEach(privilege -> 
                 subject.getPrincipals().add(new PrivilegePrincipal(privilege.name()))
             );

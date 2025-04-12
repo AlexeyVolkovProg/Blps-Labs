@@ -1,11 +1,13 @@
 package org.example.firstlabis.service.security.jwt;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.example.firstlabis.dto.authentication.request.UserDto;
-import org.example.firstlabis.dto.authentication.response.JwtResponseDTO;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.example.firstlabis.dto.authentication.request.LoginRequestDTO;
 import org.example.firstlabis.dto.authentication.request.RegisterRequestDTO;
+import org.example.firstlabis.dto.authentication.request.UserDto;
+import org.example.firstlabis.dto.authentication.response.JwtResponseDTO;
 import org.example.firstlabis.model.security.Role;
 import org.example.firstlabis.model.security.User;
 import org.example.firstlabis.service.security.xml.XmlUserService;
@@ -18,12 +20,10 @@ import org.springframework.security.authentication.AuthenticationServiceExceptio
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -101,7 +101,6 @@ public class AuthenticationService {
      */
     private void validateRegisterRequest(RegisterRequestDTO request) {
         validateUsername(request.username());
-        // Skip password uniqueness validation for XML implementation
     }
 
     /**
@@ -129,9 +128,9 @@ public class AuthenticationService {
     private User mapToUser(RegisterRequestDTO request, Role role) {
         return User.builder()
                 .username(request.username())
-                .password(request.password()) // Will be encoded by XmlUserService when saved
+                .password(request.password()) // XmlUserService захеширует при сохранении
                 .role(role)
-                .enabledStatus(true) // Always set to true now that we use roles for approval
+                .enabledStatus(true)
                 .build();
     }
 
