@@ -67,3 +67,10 @@ thymeleaf:
 
 server:
   port: 8080
+
+# Jira Configuration
+jira:
+  url: http://jira:8080
+  username: admin
+  password: admin
+  project.key: COMP 
