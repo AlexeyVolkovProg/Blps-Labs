@@ -20,6 +20,7 @@ import org.example.firstlabis.repository.VideoRepository;
 import org.example.firstlabis.repository.VideoReviewRepository;
 import org.example.firstlabis.service.util.GenerateUrlUtil;
 import org.example.firstlabis.service.util.SecurityUtil;
+import org.example.jira.JiraService;
 import org.springframework.stereotype.Service;
 
 import jakarta.persistence.EntityManager;
@@ -41,6 +42,7 @@ public class VideoService {
     private final VideoReviewRepository videoReviewRepository;
     private final GenerateUrlUtil generateUrlUtil;
     private final UserTransaction userTransaction;
+    private final JiraService jiraService;
 
 
     public VideoResponseDTO uploadVideo(VideoCreateRequestDTO videoDTO) {
@@ -124,6 +126,14 @@ public class VideoService {
                                     Map.Entry::getValue))
             );
             videoReviewRepository.save(videoReview);
+
+            // Create Jira ticket for manual review
+            String ticketKey = jiraService.createComplaintTicket(
+                video.getId().toString(),
+                "Multiple complaints received. Reasons: " + complaintsCount
+            );
+            videoReview.setJiraTicketKey(ticketKey);
+            videoReviewRepository.save(videoReview);
         }
     }
 
@@ -137,12 +147,15 @@ public class VideoService {
     }
 
     // Принятие или отклонение видео модераторами
-
+    @Transactional
     public void moderateVideo(UUID videoId, boolean approve, BlockReason blockReason) {
         try {
-            userTransaction.begin();
-            EntityManager entityManager = entityManagerFactory.createEntityManager();
             Video video = entityManager.find(Video.class, videoId);
+            
+            // Get the associated Jira ticket
+            VideoReview videoReview = videoReviewRepository.findByVideo(video)
+                .orElseThrow(() -> new RuntimeException("Video review not found"));
+            
             if (approve) {
                 video.setStatus(VideoStatus.APPROVED);
                 complaintRepository.deleteAllByVideoId(video.getId());
@@ -151,11 +164,15 @@ public class VideoService {
                 video.setStatus(VideoStatus.REJECTED);
                 video.setBlockReason(blockReason);
             }
+            
+            // Update Jira ticket status
+            if (videoReview.getJiraTicketKey() != null) {
+                jiraService.markTicketAsDone(videoReview.getJiraTicketKey());
+            }
+            
             entityManager.merge(video);
-            userTransaction.commit();
         } catch (Exception e) {
             try {
-                userTransaction.rollback();
                 log.warn("Transaction rolled back : {}", e.getMessage());
             } catch (Exception rollbackEx) {
                 log.error("Rollback also failed: {}", rollbackEx.getMessage(), rollbackEx);

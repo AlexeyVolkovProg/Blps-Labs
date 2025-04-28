@@ -25,8 +25,10 @@ public class JiraConnectionImpl implements JiraConnection {
             @Value("${jira.url}") String jiraUrl,
             @Value("${jira.username}") String username,
             @Value("${jira.password}") String password) {
+        // Ensure the URL ends with a slash
+        String normalizedUrl = jiraUrl.endsWith("/") ? jiraUrl : jiraUrl + "/";
         this.jiraRestClient = new AsynchronousJiraRestClientFactory()
-                .createWithBasicHttpAuthentication(URI.create(jiraUrl), username, password);
+                .createWithBasicHttpAuthentication(URI.create(normalizedUrl), username, password);
     }
 
     @Override
@@ -36,14 +38,14 @@ public class JiraConnectionImpl implements JiraConnection {
                     .setProjectKey(projectKey)
                     .setSummary(summary)
                     .setDescription(description)
-                    .setIssueTypeId(10001L) // Task type
+                    .setIssueTypeId(10002L) // Task type
                     .build();
 
             BasicIssue issue = jiraRestClient.getIssueClient()
                     .createIssue(issueInput)
                     .get();
 
-            return gson.toJson(issue);
+            return issue.getId().toString();
         } catch (InterruptedException | ExecutionException e) {
             throw new IOException("Failed to create Jira issue", e);
         }

@@ -35,3 +35,6 @@ build/
 
 users.xml
 .gigaide
+
+ObjectStore/
+Put

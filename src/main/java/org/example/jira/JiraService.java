@@ -24,7 +24,7 @@ public class JiraService {
 
     public void markTicketAsDone(String issueKey) {
         try {
-            jiraConnection.transitionIssue(issueKey, "31"); // 31 is typically the ID for "Done" transition
+            jiraConnection.transitionIssue(issueKey, "21");
         } catch (Exception e) {
             throw new RuntimeException("Failed to transition Jira ticket", e);
         }
