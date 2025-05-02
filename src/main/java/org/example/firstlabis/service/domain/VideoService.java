@@ -26,6 +26,7 @@ import org.example.firstlabis.service.util.GenerateUrlUtil;
 import org.example.firstlabis.service.util.SecurityUtil;
 import org.example.jira.JiraService;
 import org.springframework.stereotype.Service;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
@@ -51,7 +52,7 @@ public class VideoService {
         video.setTitle(videoDTO.getTitle());
         video.setDescription(videoDTO.getDescription());
         video.setUrl(generateUrlUtil.generateVideoUrl(video.getId())); // генерируем нам ссылочку
-        video.setStatus(autoModerateVideo(video));// мокаем процесса проверки
+        video.setStatus(VideoStatus.PENDING);// мокаем процесса проверки
         try {
             String currentUsername = SecurityUtil.getCurrentUsername();
             log.info("Setting video owner to: {}", currentUsername);
@@ -64,6 +65,18 @@ public class VideoService {
         video = videoRepository.save(video);
         log.info("Video saved successfully with ID: {}", video.getId());
         return convertToDTO(video);
+    }
+
+    @Scheduled(fixedRate = 5000) // 5 сэконд
+    @Transactional
+    public void autoModeratePendingVideos() {
+        List<Video> pendingVideos = videoRepository.findByStatus(VideoStatus.PENDING);
+        for (Video video : pendingVideos) {
+            VideoStatus newStatus = autoModerateVideo(video);
+            video.setStatus(newStatus);
+            videoRepository.save(video);
+            log.info("Auto-moderated video {}: new status = {}", video.getId(), newStatus);
+        }
     }
 
     private VideoStatus autoModerateVideo(Video video) {
