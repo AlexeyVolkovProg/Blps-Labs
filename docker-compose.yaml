@@ -5,12 +5,15 @@ services:
     image: postgres:14.1-alpine
     container_name: postgres-db-is11
     restart: always
+    profiles: ["storage"]
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: mydatabase
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
   jira:
     container_name: jira
@@ -22,10 +25,13 @@ services:
       - JIRA_DB_URL=jdbc:postgresql://postgres:5432/jiradb
       - JIRA_DB_USER=postgres
       - JIRA_DB_PASSWORD=postgres
+    profiles: ["storage"]
     ports:
       - "8081:8080"
     depends_on:
       - postgres
+    volumes:
+      - jira_data:/var/atlassian/application-data/jira
 
   is-lab:
     build: .
@@ -46,6 +52,7 @@ services:
     image: rmohr/activemq:latest
     container_name: activemq
     restart: always
+    profiles: ["storage"]
     ports:
       - "8161:8161"    # Web Console
       - "61616:61616"  # TCP
@@ -54,4 +61,6 @@ services:
       - ACTIVEMQ_ADMIN_LOGIN=admin
       - ACTIVEMQ_ADMIN_PASSWORD=admin
 
-
+volumes:
+  postgres_data:
+  jira_data:
