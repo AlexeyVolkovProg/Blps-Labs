@@ -1,13 +1,12 @@
-package org.example.firstlabis.model.domain;
+package org.core.moderservice.model.domain;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.example.firstlabis.model.audit.TrackEntity;
-import org.example.firstlabis.model.domain.enums.BlockReason;
-import org.example.firstlabis.model.security.User;
+import org.core.moderservice.model.audit.TrackEntity;
+import org.core.moderservice.model.domain.enums.BlockReason;
 
 import java.util.UUID;
 

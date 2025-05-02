@@ -13,7 +13,10 @@ import jakarta.resource.spi.ConnectionRequestInfo;
 import jakarta.resource.spi.ManagedConnection;
 import jakarta.resource.spi.ManagedConnectionFactory;
 
-@ConnectionDefinition(connectionFactory = JiraConnectionFactory.class, connectionFactoryImpl = JiraConnectionFactoryImpl.class, connection = JiraConnection.class, connectionImpl = JiraConnectionImpl.class)
+@ConnectionDefinition(connectionFactory = JiraConnectionFactory.class,
+        connectionFactoryImpl = JiraConnectionFactoryImpl.class,
+        connection = JiraConnection.class,
+        connectionImpl = JiraConnectionImpl.class)
 public class JiraManagedConnectionFactory implements ManagedConnectionFactory, Serializable {
     private static final Logger log = Logger.getLogger(JiraManagedConnectionFactory.class.getName());
     private String jiraUrl;
@@ -61,7 +64,9 @@ public class JiraManagedConnectionFactory implements ManagedConnectionFactory, S
     }
 
     @Override
-    public ManagedConnection matchManagedConnections(@SuppressWarnings("rawtypes") Set connections, Subject subject, ConnectionRequestInfo cxRequestInfo) throws ResourceException {
+    public ManagedConnection matchManagedConnections(@SuppressWarnings("rawtypes") Set connections,
+                                                     Subject subject,
+                                                     ConnectionRequestInfo cxRequestInfo) throws ResourceException {
         return null;
     }
 

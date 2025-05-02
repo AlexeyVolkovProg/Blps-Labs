@@ -42,7 +42,7 @@ public class VideoController {
 
     @PostMapping("/complaints")
     public ResponseEntity<Void> fileComplaint(@RequestBody ComplaintCreateRequestDTO complaintDTO) {
-        videoService.newCreateComplaint(complaintDTO);
+        videoService.createNewComplaint(complaintDTO);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 

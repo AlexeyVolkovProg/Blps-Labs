@@ -6,6 +6,10 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.example.firstlabis.broker.ModerationConsumerJMS;
+import org.example.firstlabis.broker.ModerationServiceStompProducer;
+import org.example.firstlabis.dto.broker.VideoModerationEvent;
+import org.example.firstlabis.dto.broker.VideoModerationEventResult;
 import org.example.firstlabis.dto.domain.ComplaintCreateRequestDTO;
 import org.example.firstlabis.dto.domain.VideoCreateRequestDTO;
 import org.example.firstlabis.dto.domain.VideoResponseDTO;
@@ -24,9 +28,7 @@ import org.example.jira.JiraService;
 import org.springframework.stereotype.Service;
 
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
 import jakarta.transaction.Transactional;
-import jakarta.transaction.UserTransaction;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,14 +38,12 @@ import lombok.extern.slf4j.Slf4j;
 public class VideoService {
 
     private final EntityManager entityManager;
-    private final EntityManagerFactory entityManagerFactory;
     private final VideoRepository videoRepository;
     private final ComplaintRepository complaintRepository;
     private final VideoReviewRepository videoReviewRepository;
     private final GenerateUrlUtil generateUrlUtil;
-    private final UserTransaction userTransaction;
     private final JiraService jiraService;
-
+    private final ModerationServiceStompProducer moderationServiceStompProducer;
 
     public VideoResponseDTO uploadVideo(VideoCreateRequestDTO videoDTO) {
         log.info("Uploading new video: {}", videoDTO.getTitle());
@@ -52,7 +52,6 @@ public class VideoService {
         video.setDescription(videoDTO.getDescription());
         video.setUrl(generateUrlUtil.generateVideoUrl(video.getId())); // генерируем нам ссылочку
         video.setStatus(autoModerateVideo(video));// мокаем процесса проверки
-
         try {
             String currentUsername = SecurityUtil.getCurrentUsername();
             log.info("Setting video owner to: {}", currentUsername);
@@ -83,7 +82,7 @@ public class VideoService {
     }
 
     @Transactional
-    public void newCreateComplaint(ComplaintCreateRequestDTO complaintDTO) {
+    public void createNewComplaint(ComplaintCreateRequestDTO complaintDTO) {
         Video video = videoRepository.findById(complaintDTO.getVideoId())
                 .orElseThrow(() -> new RuntimeException("Video not found"));
 
@@ -103,10 +102,15 @@ public class VideoService {
             newComplaint.setOwnerUsername(currentUsername);
             complaintRepository.save(newComplaint);
         }
-        updateVideoReview(video);
+        processedVideoReview(video);
     }
 
-    private void updateVideoReview(Video video) {
+    /**
+     * Метод отправляющий данные о видео в сервис модерации видео,
+     * где на их основе будет создаваться заявка на модерацию видео
+     * @param video рассматриваемое видео
+     */
+    private void processedVideoReview(Video video) {
         List<Complaint> complaints = complaintRepository.findByVideoId(video.getId());
 
         Map<BlockReason, Long> complaintsCount = complaints.stream()
@@ -115,26 +119,36 @@ public class VideoService {
         if (complaintsCount.values().stream().anyMatch(count -> count > 1)) {
             video.setStatus(VideoStatus.UNDER_REVIEW);
             videoRepository.save(video);
-
-            VideoReview videoReview = videoReviewRepository.findByVideo(video)
-                    .orElse(new VideoReview());
-
-            videoReview.setVideo(video);
-            videoReview.setComplaints(
-                    complaintsCount.entrySet().stream()
-                            .collect(Collectors.toMap(Map.Entry::getKey,
-                                    Map.Entry::getValue))
-            );
-            videoReviewRepository.save(videoReview);
-
-            // Create Jira ticket for manual review
-            String ticketKey = jiraService.createComplaintTicket(
-                video.getId().toString(),
-                "Multiple complaints received. Reasons: " + complaintsCount
-            );
-            videoReview.setJiraTicketKey(ticketKey);
-            videoReviewRepository.save(videoReview);
+            //Отправляем сообщение в брокер
+            moderationServiceStompProducer.sendMessageForModeration(new VideoModerationEvent(video.getId()));
         }
+    }
+
+    @Transactional
+    public void createComplaintJiraTicket(VideoModerationEventResult eventResult) {
+        log.info("Начинаем сознание тикета Jira для видео {}", eventResult.getVideoId());
+        List<Complaint> complaints = complaintRepository.findByVideoId(eventResult.getVideoId());
+
+        Map<BlockReason, Long> complaintsCount = complaints.stream()
+                .collect(Collectors.groupingBy(Complaint::getReason, Collectors.counting()));
+        String complaintsString = complaintsCount.entrySet().stream()
+                .map(entry -> entry.getKey() + "=" + entry.getValue())
+                .collect(Collectors.joining(", "));
+
+        String ticketKey = jiraService.createComplaintTicket(
+                eventResult.getVideoId().toString(),
+                "Multiple complaints received. Reasons: " + complaintsString
+        );
+
+        Video video = videoRepository.findById(eventResult.getVideoId())
+                .orElseThrow(() -> new RuntimeException("Video not found"));
+
+        VideoReview videoReview = videoReviewRepository.findByVideo(video)
+                .orElse(new VideoReview());
+
+        videoReview.setJiraTicketKey(ticketKey);
+        videoReviewRepository.save(videoReview);
+        log.info("Заканчиваем сознание тикета Jira для видео {}", eventResult.getVideoId());
     }
 
     // Получить все заявки на повторной проверке

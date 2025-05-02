@@ -1,11 +1,11 @@
-package org.example.firstlabis.model.domain;
+package org.core.moderservice.model.domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.example.firstlabis.model.audit.TrackEntity;
-import org.example.firstlabis.model.domain.enums.BlockReason;
-import org.example.firstlabis.model.domain.enums.VideoStatus;
+import org.core.moderservice.model.audit.TrackEntity;
+import org.core.moderservice.model.domain.enums.BlockReason;
+import org.core.moderservice.model.domain.enums.VideoStatus;
 
 import java.util.List;
 import java.util.UUID;

@@ -42,4 +42,16 @@ services:
     ports:
       - "8080:8080"
 
+  activemq:
+    image: rmohr/activemq:latest
+    container_name: activemq
+    restart: always
+    ports:
+      - "8161:8161"    # Web Console
+      - "61616:61616"  # TCP
+      - "61613:61613"  # STOMP
+    environment:
+      - ACTIVEMQ_ADMIN_LOGIN=admin
+      - ACTIVEMQ_ADMIN_PASSWORD=admin
+
 

@@ -1,5 +1,8 @@
-package org.example.jira;
+package org.example.jira.config;
 
+import org.example.jira.JiraConnectionFactory;
+import org.example.jira.JiraConnectionFactoryImpl;
+import org.example.jira.JiraManagedConnectionFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

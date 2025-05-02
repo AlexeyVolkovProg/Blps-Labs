@@ -1,8 +1,9 @@
-package org.example.firstlabis.model.domain;
+package org.core.moderservice.model.domain;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import org.example.firstlabis.model.domain.enums.BlockReason;
+import org.core.moderservice.model.domain.enums.BlockReason;
+import org.core.moderservice.util.MapToJsonbConverter;
 
 import java.util.Map;
 import java.util.UUID;
@@ -23,11 +24,8 @@ public class VideoReview {
     @JoinColumn(name = "video_id")
     private Video video;
 
-    @ElementCollection
-    @CollectionTable(name = "video_review_complaints", 
-        joinColumns = @JoinColumn(name = "video_review_id"))
-    @MapKeyColumn(name = "reason")
     @Column(name = "count")
+    @Convert(converter = MapToJsonbConverter.class)
     private Map<BlockReason, Long> complaints;
 
     @Column(name = "jira_ticket_key")

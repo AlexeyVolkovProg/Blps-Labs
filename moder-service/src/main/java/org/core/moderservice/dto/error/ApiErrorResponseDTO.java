@@ -1,4 +1,4 @@
-package org.example.firstlabis.dto.error;
+package org.core.moderservice.dto.error;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

@@ -31,10 +31,3 @@ build/
 
 ### VS Code ###
 .vscode/
-.env
-
-users.xml
-.gigaide/
-
-ObjectStore/
-Put

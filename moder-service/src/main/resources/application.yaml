@@ -1,6 +1,6 @@
 spring:
   application:
-    name: firstLabBLPS
+    name: moder-service
 
   servlet:
     multipart:
@@ -62,7 +62,7 @@ logging:
     com.arjuna: DEBUG
 
 
-admin: # логин и пароль главного админа, который изначально есть в системе
+admin: # ????? ? ?????? ???????? ??????, ??????? ?????????? ???? ? ???????
   username: admin_main
   password: admin_main
 
@@ -73,14 +73,14 @@ thymeleaf:
   suffix: .html
 
 server:
-  port: 8080
+  port: 8095
 
 # Jira Configuration
 jira:
   url: http://localhost:8081
   username: ${JIRA_SERVICE_ACCOUNT_USERNAME:jboss}
   password: ${JIRA_SERVICE_ACCOUNT_PASSWORD:jboss}
-  project.key: COMP 
+  project.key: COMP
 
 topic:
   name:

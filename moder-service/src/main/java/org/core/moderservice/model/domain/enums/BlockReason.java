@@ -1,4 +1,4 @@
-package org.example.firstlabis.model.domain.enums;
+package org.core.moderservice.model.domain.enums;
 
 public enum BlockReason {
     NOT_BLOCKED,

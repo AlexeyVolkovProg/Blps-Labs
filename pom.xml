@@ -191,6 +191,45 @@
             <version>5.0.0</version>
             <scope>provided</scope>
         </dependency>
+
+
+        <!-- https://mvnrepository.com/artifact/org.apache.activemq/activemq-stomp -->
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-stomp</artifactId>
+            <version>6.1.6</version>
+        </dependency>
+
+        <!-- Apache ActiveMQ client (STOMP и OpenWire) -->
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-spring</artifactId>
+        </dependency>
+
+        <!-- Jackson для сериализации объектов -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.projectreactor.netty</groupId>
+            <artifactId>reactor-netty</artifactId>
+            <version>1.1.13</version> <!-- или другую совместимую с твоим Spring Boot 3.3.4 -->
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.fusesource.stompjms/stompjms-client -->
+        <dependency>
+            <groupId>org.fusesource.stompjms</groupId>
+            <artifactId>stompjms-client</artifactId>
+            <version>1.19</version>
+        </dependency>
+
+        <dependency>
+            <groupId>javax.jms</groupId>
+            <artifactId>javax.jms-api</artifactId>
+            <version>2.0.1</version> <!-- Замените на актуальную версию -->
+        </dependency>
     </dependencies>
 
     <build>
