@@ -8,6 +8,11 @@ import jakarta.resource.ResourceException;
 import jakarta.resource.spi.ConnectionManager;
 import jakarta.resource.spi.ManagedConnectionFactory;
 
+/**
+ * Реализация фабрики логических соединений.
+ * 
+ * Использует JiraManagedConnectionFactory для создания новых логических соединений (JiraConnection).
+ */
 public class JiraConnectionFactoryImpl implements JiraConnectionFactory, Serializable {
     private final ManagedConnectionFactory mcf;
     private final ConnectionManager cm;

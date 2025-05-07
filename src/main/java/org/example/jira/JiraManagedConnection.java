@@ -15,6 +15,11 @@ import jakarta.resource.spi.LocalTransaction;
 import jakarta.resource.spi.ManagedConnection;
 import jakarta.resource.spi.ManagedConnectionMetaData;
 
+/**
+ * Представляет физическое соединение с Jira, управляемое контейнером.
+ *
+ * Содержит методы для управления транзакциями, ассоциации с логическими соединениями, закрытия и очистки соединения.
+ */
 public class JiraManagedConnection implements ManagedConnection {
     private static final Logger log = Logger.getLogger(JiraManagedConnection.class.getName());
     private final JiraManagedConnectionFactory mcf;

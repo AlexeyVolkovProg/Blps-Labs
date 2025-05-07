@@ -14,6 +14,14 @@ import jakarta.resource.spi.ResourceAdapterInternalException;
 import jakarta.resource.spi.endpoint.MessageEndpointFactory;
 import jakarta.resource.spi.work.WorkManager;
 
+/**
+ * Это основной класс адаптера ресурсов, который управляет жизненным циклом подключения к Jira.
+ * 
+ * Реализует интерфейс javax.resource.spi.ResourceAdapter.
+ * Обычно содержит методы для инициализации, старта, остановки и очистки ресурсов адаптера.
+ * 
+ * @author amphyxs
+ */
 @Connector(displayName = "Jira Resource Adapter", vendorName = "Example", version = "1.0")
 public class JiraResourceAdapter implements ResourceAdapter, Serializable {
     private static final Logger log = Logger.getLogger(JiraResourceAdapter.class.getName());

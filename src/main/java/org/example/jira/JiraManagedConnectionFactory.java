@@ -13,6 +13,14 @@ import jakarta.resource.spi.ConnectionRequestInfo;
 import jakarta.resource.spi.ManagedConnection;
 import jakarta.resource.spi.ManagedConnectionFactory;
 
+/**
+ * Фабрика управляемых соединений. Создаёт объекты соединения с Jira, которые могут управляться контейнером приложений.
+ * 
+ * Реализует интерфейс javax.resource.spi.ManagedConnectionFactory.
+ * Содержит логику создания физических соединений (JiraManagedConnection) и фабрик соединений (JiraConnectionFactoryImpl).
+ * 
+ * @author amphyxs
+ */
 @ConnectionDefinition(connectionFactory = JiraConnectionFactory.class,
         connectionFactoryImpl = JiraConnectionFactoryImpl.class,
         connection = JiraConnection.class,

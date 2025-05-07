@@ -16,6 +16,12 @@ import com.atlassian.jira.rest.client.api.domain.input.TransitionInput;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 import com.google.gson.Gson;
 
+/**
+ * Реализация логического соединения с Jira.
+ * 
+ * Содержит бизнес-логику для взаимодействия с Jira через REST API или другой протокол.
+ * Обычно делегирует низкоуровневые операции объекту JiraManagedConnection.
+ */
 @Component
 public class JiraConnectionImpl implements JiraConnection {
     private final JiraRestClient jiraRestClient;
