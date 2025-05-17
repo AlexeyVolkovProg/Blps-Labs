@@ -86,3 +86,31 @@ topic:
   name:
     moder-service-request: moderationTopic
     moder-service-response: moderationTopicResponse
+
+# Camunda Configuration
+camunda:
+  bpm:
+    admin-user:
+      id: admin
+      password: admin
+      firstName: Admin
+    filter:
+      create: All tasks
+    database:
+      type: postgres
+    webapp:
+      application-path: /camunda
+    authorization:
+      enabled: true
+    job-execution:
+      enabled: true
+    metrics:
+      enabled: true
+    history-level: full
+    process-engine-name: default
+    form:
+      enabled: true
+      resource-path: classpath:forms/
+    generic-properties:
+      properties:
+        historyTimeToLive: P1D

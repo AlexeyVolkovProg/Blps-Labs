@@ -1,0 +1,101 @@
+{
+  "components": [
+    {
+      "label": "Имя пользователя",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_0gj6g34",
+        "columns": null
+      },
+      "id": "Field_0jr439c",
+      "key": "username",
+      "formField": {
+        "id": "username",
+        "type": "string"
+      }
+    },
+    {
+      "label": "Пароль",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_0a0fvlp",
+        "columns": null
+      },
+      "id": "Field_0e8rkbq",
+      "key": "password",
+      "formField": {
+        "id": "password",
+        "type": "string"
+      }
+    },
+    {
+      "label": "Вход или регистрация",
+      "values": [
+        {
+          "label": "Вход",
+          "value": "login"
+        },
+        {
+          "label": "Регистрация",
+          "value": "register"
+        }
+      ],
+      "type": "select",
+      "layout": {
+        "row": "Row_171bqvi",
+        "columns": null
+      },
+      "id": "Field_19ygcq5",
+      "key": "action",
+      "defaultValue": "login",
+      "formField": {
+        "id": "action",
+        "type": "string"
+      }
+    },
+    {
+      "label": "Тип регистрирумого пользователя",
+      "values": [
+        {
+          "label": "Обычный пользователь",
+          "value": "user"
+        },
+        {
+          "label": "Администратор",
+          "value": "admin"
+        }
+      ],
+      "type": "select",
+      "layout": {
+        "row": "Row_1ramcv5",
+        "columns": null
+      },
+      "id": "Field_0ns921w",
+      "key": "userType",
+      "defaultValue": "user",
+      "formField": {
+        "id": "userType",
+        "type": "string"
+      }
+    },
+    {
+      "label": "Далее",
+      "action": "submit",
+      "type": "button",
+      "layout": {
+        "row": "Row_19nqd1e",
+        "columns": null
+      },
+      "id": "Field_0q9fyrv"
+    }
+  ],
+  "type": "default",
+  "id": "login-form",
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5.32.0"
+  },
+  "executionPlatform": "Camunda Platform",
+  "executionPlatformVersion": "7.23.0",
+  "schemaVersion": 18
+}
