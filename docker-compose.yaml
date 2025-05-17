@@ -35,6 +35,7 @@ services:
 
   is-lab:
     build: .
+    profiles: ["app"]
     depends_on:
       - postgres
       - jira

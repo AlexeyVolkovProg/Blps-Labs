@@ -73,7 +73,7 @@ thymeleaf:
   suffix: .html
 
 server:
-  port: 8080
+  port: 8982
 
 # Jira Configuration
 jira:
@@ -100,6 +100,7 @@ camunda:
       type: postgres
     webapp:
       application-path: /camunda
+      port: 8192
     authorization:
       enabled: true
     job-execution:

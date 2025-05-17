@@ -38,3 +38,5 @@ users.xml
 
 ObjectStore/
 Put
+
+*.http

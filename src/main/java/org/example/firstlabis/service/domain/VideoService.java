@@ -92,12 +92,14 @@ public class VideoService {
         return convertToDTO(video);
     }
 
-    @Transactional
     public void createNewComplaint(ComplaintCreateRequestDTO complaintDTO) {
+        createNewComplaintForUser(complaintDTO, SecurityUtil.getCurrentUsername());        
+    }
+
+    @Transactional
+    public void createNewComplaintForUser(ComplaintCreateRequestDTO complaintDTO, String currentUsername) {
         Video video = videoRepository.findById(complaintDTO.getVideoId())
                 .orElseThrow(() -> new RuntimeException("Video not found"));
-
-        String currentUsername = SecurityUtil.getCurrentUsername();
 
         Optional<Complaint> existingComplaint = complaintRepository.findByVideoIdAndOwnerUsername(
                 complaintDTO.getVideoId(), currentUsername);

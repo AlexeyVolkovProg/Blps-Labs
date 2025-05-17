@@ -1,0 +1,58 @@
+{
+  "components": [
+    {
+      "label": "ID видео, чтобы пожаловаться",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_0sbafnz",
+        "columns": null
+      },
+      "id": "Field_0d9u20p",
+      "key": "videoIdToComplain"
+    },
+    {
+      "label": "Причина жалобы",
+      "values": [
+        {
+          "label": "Порнография",
+          "value": "PORNOGRAPHY"
+        },
+        {
+          "label": "Терроризм",
+          "value": "TERRORISM"
+        },
+        {
+          "label": "Насилие",
+          "value": "CRUELTY"
+        }
+      ],
+      "type": "select",
+      "layout": {
+        "row": "Row_175udaz",
+        "columns": null
+      },
+      "id": "Field_0degtwv",
+      "key": "complainReason",
+      "defaultValue": "PORNOGRAPHY"
+    },
+    {
+      "label": "Пожаловаться",
+      "action": "submit",
+      "type": "button",
+      "layout": {
+        "row": "Row_0wj0qxk",
+        "columns": null
+      },
+      "id": "Field_0lqyyms"
+    }
+  ],
+  "type": "default",
+  "id": "Form_0dq5f43",
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5.32.0"
+  },
+  "executionPlatform": "Camunda Platform",
+  "executionPlatformVersion": "7.22.0",
+  "schemaVersion": 18
+}
