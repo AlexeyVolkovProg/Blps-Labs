@@ -65,24 +65,19 @@ public class VideoService {
         return convertToDTO(video);
     }
 
-    @Scheduled(fixedRate = 5000) // 5 сэконд
     @Transactional
-    public void autoModeratePendingVideos() {
-        List<Video> pendingVideos = videoRepository.findByStatus(VideoStatus.PENDING);
-        for (Video video : pendingVideos) {
-            VideoStatus newStatus = autoModerateVideo(video);
-            video.setStatus(newStatus);
-            videoRepository.save(video);
-            log.info("Auto-moderated video {}: new status = {}", video.getId(), newStatus);
-        }
-    }
+    public BlockReason autoModerateVideo(Video video) {
+        BlockReason blockReason;
 
-    private VideoStatus autoModerateVideo(Video video) {
         if (video.getTitle().length() > 5) {
-            return VideoStatus.APPROVED;
+            blockReason = BlockReason.NOT_BLOCKED;
+        } else {
+            blockReason = BlockReason.PORNOGRAPHY;
         }
-        video.setBlockReason(BlockReason.PORNOGRAPHY);
-        return VideoStatus.REJECTED;
+
+        log.info("Auto-moderated video {}: found block reason = {}", video.getId(), blockReason);
+
+        return blockReason;
     }
 
     // Получение видео по ID

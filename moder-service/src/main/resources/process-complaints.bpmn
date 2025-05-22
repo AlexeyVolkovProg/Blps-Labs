@@ -24,44 +24,44 @@
       </bpmn:lane>
       <bpmn:lane id="Lane_01c9hy4" name="Сервисы">
         <bpmn:flowNodeRef>Event_05f8xvf</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Activity_0bhbvwl</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Gateway_0vf3bm2</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Event_1pxa01l</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Activity_0xursk7</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Event_19gtrlb</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_0bhbvwl</bpmn:flowNodeRef>
       </bpmn:lane>
     </bpmn:laneSet>
     <bpmn:endEvent id="Event_05f8xvf" name=":Жалоба сохранена">
       <bpmn:incoming>Flow_0bq3bmi</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:serviceTask id="Activity_0bhbvwl" name="Сохранить жалобу">
+    <bpmn:startEvent id="Event_1pxa01l" name="Запрос на сохранение жалобы">
+      <bpmn:outgoing>Flow_1umrndh</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:dataStoreReference id="DataStoreReference_135ekmb" name="Хранилище жалоб" />
+    <bpmn:sequenceFlow id="Flow_0rtsw1l" sourceRef="Activity_0xursk7" targetRef="Event_19gtrlb" />
+    <bpmn:sequenceFlow id="Flow_1fbn5c5" name="Да" sourceRef="Gateway_0vf3bm2" targetRef="Activity_0xursk7" />
+    <bpmn:sequenceFlow id="Flow_1umrndh" sourceRef="Event_1pxa01l" targetRef="Gateway_0vf3bm2" />
+    <bpmn:endEvent id="Event_19gtrlb" name="Событие отправлено для дальнейшей обработки">
+      <bpmn:incoming>Flow_0rtsw1l</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sendTask id="Activity_0xursk7" name="Поместить видео в очередь на ручную проверку">
+      <bpmn:incoming>Flow_1fbn5c5</bpmn:incoming>
+      <bpmn:outgoing>Flow_0rtsw1l</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:sequenceFlow id="Flow_0bq3bmi" sourceRef="Activity_0bhbvwl" targetRef="Event_05f8xvf" />
+    <bpmn:exclusiveGateway id="Gateway_0vf3bm2" name="Количество жалоб для данного видео превысило 100?">
+      <bpmn:incoming>Flow_1umrndh</bpmn:incoming>
+      <bpmn:outgoing>Flow_1fbn5c5</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1rr45mg</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_1rr45mg" name="Нет" sourceRef="Gateway_0vf3bm2" targetRef="Activity_0bhbvwl" />
+    <bpmn:serviceTask id="Activity_0bhbvwl" name="Увеличение счётчика жалоб">
       <bpmn:incoming>Flow_1rr45mg</bpmn:incoming>
       <bpmn:outgoing>Flow_0bq3bmi</bpmn:outgoing>
       <bpmn:dataOutputAssociation id="DataOutputAssociation_1i7kkwd">
         <bpmn:targetRef>DataStoreReference_135ekmb</bpmn:targetRef>
       </bpmn:dataOutputAssociation>
     </bpmn:serviceTask>
-    <bpmn:exclusiveGateway id="Gateway_0vf3bm2" name="Количество жалоб для данного видео превысило 100?">
-      <bpmn:incoming>Flow_1umrndh</bpmn:incoming>
-      <bpmn:outgoing>Flow_1fbn5c5</bpmn:outgoing>
-      <bpmn:outgoing>Flow_1rr45mg</bpmn:outgoing>
-    </bpmn:exclusiveGateway>
-    <bpmn:startEvent id="Event_1pxa01l" name="Запрос на сохранение жалобы">
-      <bpmn:outgoing>Flow_1umrndh</bpmn:outgoing>
-    </bpmn:startEvent>
-    <bpmn:dataStoreReference id="DataStoreReference_135ekmb" name="Хранилище жалоб" />
-    <bpmn:sequenceFlow id="Flow_0rtsw1l" sourceRef="Activity_0xursk7" targetRef="Event_19gtrlb" />
-    <bpmn:sequenceFlow id="Flow_0bq3bmi" sourceRef="Activity_0bhbvwl" targetRef="Event_05f8xvf" />
-    <bpmn:sequenceFlow id="Flow_1fbn5c5" name="Да" sourceRef="Gateway_0vf3bm2" targetRef="Activity_0xursk7" />
-    <bpmn:sequenceFlow id="Flow_1rr45mg" name="Нет" sourceRef="Gateway_0vf3bm2" targetRef="Activity_0bhbvwl" />
-    <bpmn:sequenceFlow id="Flow_1umrndh" sourceRef="Event_1pxa01l" targetRef="Gateway_0vf3bm2" />
-    <bpmn:sendTask id="Activity_0xursk7" name="Поместить видео в очередь на ручную проверку">
-      <bpmn:incoming>Flow_1fbn5c5</bpmn:incoming>
-      <bpmn:outgoing>Flow_0rtsw1l</bpmn:outgoing>
-    </bpmn:sendTask>
-    <bpmn:endEvent id="Event_19gtrlb" name="Событие отправлено для дальнейшей обработки">
-      <bpmn:incoming>Flow_0rtsw1l</bpmn:incoming>
-    </bpmn:endEvent>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_0f52e4a">
@@ -69,12 +69,12 @@
         <dc:Bounds x="160" y="2132" width="690" height="763" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_1jl3u08" bpmnElement="Lane_06k2tvr" isHorizontal="true">
-        <dc:Bounds x="190" y="2545" width="660" height="350" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_1gduyr4" bpmnElement="Lane_01c9hy4" isHorizontal="true">
         <dc:Bounds x="190" y="2132" width="660" height="413" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1jl3u08" bpmnElement="Lane_06k2tvr" isHorizontal="true">
+        <dc:Bounds x="190" y="2545" width="660" height="350" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_0j6t8dn" bpmnElement="Event_05f8xvf">
@@ -85,6 +85,7 @@
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_0pl424q" bpmnElement="Activity_0bhbvwl">
         <dc:Bounds x="363" y="2362" width="100" height="80" />
+        <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_0om8t3m" bpmnElement="Gateway_0vf3bm2" isMarkerVisible="true">
         <dc:Bounds x="388" y="2237" width="50" height="50" />
