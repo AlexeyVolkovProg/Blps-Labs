@@ -72,7 +72,7 @@ public class AuthenticationService {
      * Метод регистрации и активации пользователя(для role:admin в первых раз без
      * активации, пока ее не подтвердят)
      */
-    private JwtResponseDTO registerWithRole(RegisterRequestDTO request, Role role) {
+    public JwtResponseDTO registerWithRole(RegisterRequestDTO request, Role role) {
         User user = createUser(request, role);
         return generateJwt(user);
     }

@@ -26,6 +26,7 @@ import org.example.firstlabis.service.util.GenerateUrlUtil;
 import org.example.firstlabis.service.util.SecurityUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.example.jira.JiraService;
 
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
@@ -42,6 +43,7 @@ public class VideoService {
     private final ComplaintRepository complaintRepository;
     private final VideoReviewRepository videoReviewRepository;
     private final GenerateUrlUtil generateUrlUtil;
+    private final JiraService jiraService;
     private final ModerationServiceStompProducer moderationServiceStompProducer;
 
     public VideoResponseDTO uploadVideo(VideoCreateRequestDTO videoDTO) {
@@ -143,12 +145,18 @@ public class VideoService {
                 .map(entry -> entry.getKey() + "=" + entry.getValue())
                 .collect(Collectors.joining(", "));
 
+        String ticketKey = jiraService.createComplaintTicket(
+            eventResult.getVideoId().toString(),
+            "Multiple complaints received. Reasons: " + complaintsString
+        );
+
         Video video = videoRepository.findById(eventResult.getVideoId())
                 .orElseThrow(() -> new RuntimeException("Video not found"));
 
         VideoReview videoReview = videoReviewRepository.findByVideo(video)
                 .orElse(new VideoReview());
 
+        videoReview.setJiraTicketKey(ticketKey);
         videoReviewRepository.save(videoReview);
         log.info("Заканчиваем сознание тикета Jira для видео {}", eventResult.getVideoId());
     }
@@ -179,6 +187,11 @@ public class VideoService {
             } else {
                 video.setStatus(VideoStatus.REJECTED);
                 video.setBlockReason(blockReason);
+            }
+
+            // Update Jira ticket status
+            if (videoReview.getJiraTicketKey() != null) {
+                jiraService.markTicketAsDone(videoReview.getJiraTicketKey());
             }
             
             entityManager.merge(video);

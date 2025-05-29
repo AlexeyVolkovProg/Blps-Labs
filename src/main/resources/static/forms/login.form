@@ -58,11 +58,11 @@
       "values": [
         {
           "label": "Обычный пользователь",
-          "value": "user"
+          "value": "USER"
         },
         {
           "label": "Администратор",
-          "value": "admin"
+          "value": "ADMIN"
         }
       ],
       "type": "select",
