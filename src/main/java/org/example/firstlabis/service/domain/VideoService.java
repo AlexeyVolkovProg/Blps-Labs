@@ -143,17 +143,17 @@ public class VideoService {
                 .map(entry -> entry.getKey() + "=" + entry.getValue())
                 .collect(Collectors.joining(", "));
         log.info("Мок, успешно создали джира тикет для видео", eventResult.getVideoId());
-//        String ticketKey = jiraService.createComplaintTicket(
-//            eventResult.getVideoId().toString(),
-//            "Multiple complaints received. Reasons: " + complaintsString
-//        );
+        String ticketKey = jiraService.createComplaintTicket(
+            eventResult.getVideoId().toString(),
+            "Multiple complaints received. Reasons: " + complaintsString
+        );
         Video video = videoRepository.findById(eventResult.getVideoId())
                 .orElseThrow(() -> new RuntimeException("Video not found"));
 
         VideoReview videoReview = videoReviewRepository.findByVideo(video)
                 .orElse(new VideoReview());
 
-        videoReview.setJiraTicketKey(null); // todo не забудь вернуть значение
+        videoReview.setJiraTicketKey(ticketKey); // todo не забудь вернуть значение
         videoReviewRepository.save(videoReview);
         log.info("Заканчиваем сознание тикета Jira для видео {}", eventResult.getVideoId());
     }
@@ -171,6 +171,7 @@ public class VideoService {
     @Transactional
     public void moderateVideo(UUID videoId, boolean approve, BlockReason blockReason) {
         try {
+            log.info("ЗАПУСТИЛИ МОДЕРАЦИЮ ВИДЕО {}", videoId);
             Video video = entityManager.find(Video.class, videoId);
             
             // Get the associated Jira ticket
@@ -178,18 +179,23 @@ public class VideoService {
                 .orElseThrow(() -> new RuntimeException("Video review not found"));
             
             if (approve) {
+                log.info("АППРУВНУЛИ ВИДЕО {}", videoId);
                 video.setStatus(VideoStatus.APPROVED);
                 complaintRepository.deleteAllByVideoId(video.getId());
                 videoReviewRepository.deleteByVideoId(video.getId());
             } else {
+                log.info("НЕ АППРУВНУЛИ ВИДЕО {}", videoId);
                 video.setStatus(VideoStatus.REJECTED);
                 video.setBlockReason(blockReason);
             }
 
+            if(blockReason == null){
+                video.setBlockReason(BlockReason.PORNOGRAPHY);
+            }
             // Update Jira ticket status
             if (videoReview.getJiraTicketKey() != null) {
                 log.info("Мок. Успешно переместили в Done наш Jira Ticket");
-//                jiraService.markTicketAsDone(videoReview.getJiraTicketKey());
+                jiraService.markTicketAsDone(videoReview.getJiraTicketKey());
             }
             
             entityManager.merge(video);

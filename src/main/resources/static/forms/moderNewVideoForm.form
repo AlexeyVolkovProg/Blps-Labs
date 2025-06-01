@@ -1,0 +1,45 @@
+{
+  "components": [
+    {
+      "label": "Видео подлежащее модерации",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_1v93h1y",
+        "columns": null
+      },
+      "id": "Field_0pxptdt",
+      "key": "textfield_y3kzdh",
+      "defaultValue": "=selectedVideoId"
+    },
+    {
+      "label": "Ваш вердикт по видео",
+      "values": [
+        {
+          "label": "APPROVE",
+          "value": "true"
+        },
+        {
+          "label": "REJECT",
+          "value": "false"
+        }
+      ],
+      "type": "select",
+      "layout": {
+        "row": "Row_0ovnp5y",
+        "columns": null
+      },
+      "id": "Field_1ddol20",
+      "key": "videoVerdict",
+      "defaultValue": "true"
+    }
+  ],
+  "type": "default",
+  "id": "Form_07arrqh",
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5.35.0"
+  },
+  "executionPlatform": "Camunda Platform",
+  "executionPlatformVersion": "7.23.0",
+  "schemaVersion": 18
+}

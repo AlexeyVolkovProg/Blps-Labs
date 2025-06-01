@@ -8,12 +8,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.firstlabis.dto.broker.ResultStatus;
 import org.example.firstlabis.dto.broker.VideoModerationEventResult;
+import org.example.firstlabis.service.camunda.CamundaService;
 import org.example.firstlabis.service.domain.VideoService;
 import org.fusesource.stomp.jms.StompJmsConnectionFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.jms.*;
+import java.time.LocalDateTime;
+import java.util.Map;
 
 @Slf4j
 @Component
@@ -30,6 +33,7 @@ public class ModerationConsumerJMS implements MessageListener {
 
     private final VideoService videoService;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final CamundaService camundaService;
 
     @PostConstruct
     public void init() {
@@ -56,7 +60,10 @@ public class ModerationConsumerJMS implements MessageListener {
                 VideoModerationEventResult event = objectMapper.readValue(body, VideoModerationEventResult.class);
                 log.info("✅ Получено сообщение о результате создания заявки на модерацию видео: {}", event.getVideoId());
                 if (ResultStatus.SUCCESS.equals(event.getResultStatus())){
-                    videoService.createComplaintJiraTicket(event);// todo вынести в другой делегат
+                    camundaService.correlateMessage("MODERATE_SERVICE_RESPONSE_MESSAGE",
+                            LocalDateTime.now().toString(),
+                            Map.of("Event", event), null);
+                   // videoService.createComplaintJiraTicket(event);// todo вынести в другой делегат
                 }
             }
         } catch (JsonProcessingException e) {

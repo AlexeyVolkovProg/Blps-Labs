@@ -31,7 +31,7 @@ public class ModerationStompProducer {
 
     @PostConstruct
     public void init() {
-        try {
+        try{
             System.out.println("Подгрузили: " + brokerUri);
             System.out.println("Подгрузили: " + topicName);
             StompJmsConnectionFactory factory = new StompJmsConnectionFactory();
