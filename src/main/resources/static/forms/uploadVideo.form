@@ -1,0 +1,33 @@
+{
+  "components": [
+    {
+      "label": "Video Title",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_1ij372d",
+        "columns": 15
+      },
+      "id": "Field_0pi1m8p",
+      "key": "title"
+    },
+    {
+      "label": "Video Description",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_1yqm6r2",
+        "columns": 15
+      },
+      "id": "Field_0cv3o4m",
+      "key": "description"
+    }
+  ],
+  "type": "default",
+  "id": "Form_1miqt29",
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5.35.0"
+  },
+  "executionPlatform": "Camunda Platform",
+  "executionPlatformVersion": "7.23.0",
+  "schemaVersion": 18
+}

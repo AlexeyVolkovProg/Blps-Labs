@@ -11,7 +11,6 @@ import org.example.firstlabis.dto.broker.VideoModerationEventResult;
 import org.example.firstlabis.service.domain.VideoService;
 import org.fusesource.stomp.jms.StompJmsConnectionFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import javax.jms.*;
@@ -44,7 +43,6 @@ public class ModerationConsumerJMS implements MessageListener {
             Topic topic = session.createTopic(topicName);
             MessageConsumer consumer = session.createDurableSubscriber(topic, "sub1");
             consumer.setMessageListener(this);
-            log.info("✅ Consumer успешно подписался на топик {} брокера {}", topicName, brokerUri);
         } catch (JMSException e) {
            log.info(e.getMessage());
         }
@@ -58,7 +56,7 @@ public class ModerationConsumerJMS implements MessageListener {
                 VideoModerationEventResult event = objectMapper.readValue(body, VideoModerationEventResult.class);
                 log.info("✅ Получено сообщение о результате создания заявки на модерацию видео: {}", event.getVideoId());
                 if (ResultStatus.SUCCESS.equals(event.getResultStatus())){
-                    videoService.createComplaintJiraTicket(event);
+                    videoService.createComplaintJiraTicket(event);// todo вынести в другой делегат
                 }
             }
         } catch (JsonProcessingException e) {

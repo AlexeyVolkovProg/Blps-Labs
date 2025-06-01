@@ -15,6 +15,20 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  camunda-postgres:
+    image: postgres:14.1-alpine
+    container_name: camunda-db
+    restart: always
+    profiles: [ "storage" ]
+    environment:
+      POSTGRES_USER: camunda_user
+      POSTGRES_PASSWORD: camunda_pass
+      POSTGRES_DB: camunda_db
+    ports:
+      - "5555:5432"  # Локальный порт 5433, внутренний всё равно 5432
+    volumes:
+      - camunda_data:/var/lib/postgresql/data
+
   jira:
     container_name: jira
     build: 
@@ -65,3 +79,4 @@ services:
 volumes:
   postgres_data:
   jira_data:
+  camunda_data:

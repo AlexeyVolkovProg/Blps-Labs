@@ -112,6 +112,7 @@ public class VideoService {
             newComplaint.setOwnerUsername(currentUsername);
             complaintRepository.save(newComplaint);
         }
+
         processedVideoReview(video);
     }
 
@@ -122,14 +123,11 @@ public class VideoService {
      */
     private void processedVideoReview(Video video) {
         List<Complaint> complaints = complaintRepository.findByVideoId(video.getId());
-
         Map<BlockReason, Long> complaintsCount = complaints.stream()
                 .collect(Collectors.groupingBy(Complaint::getReason, Collectors.counting()));
-
-        if (complaintsCount.values().stream().anyMatch(count -> count > 1)) {
+        if (complaintsCount.values().stream().anyMatch(count -> count >= 1)) {
             video.setStatus(VideoStatus.UNDER_REVIEW);
             videoRepository.save(video);
-            //Отправляем сообщение в брокер
             moderationServiceStompProducer.sendMessageForModeration(new VideoModerationEvent(video.getId()));
         }
     }
@@ -144,19 +142,18 @@ public class VideoService {
         String complaintsString = complaintsCount.entrySet().stream()
                 .map(entry -> entry.getKey() + "=" + entry.getValue())
                 .collect(Collectors.joining(", "));
-
-        String ticketKey = jiraService.createComplaintTicket(
-            eventResult.getVideoId().toString(),
-            "Multiple complaints received. Reasons: " + complaintsString
-        );
-
+        log.info("Мок, успешно создали джира тикет для видео", eventResult.getVideoId());
+//        String ticketKey = jiraService.createComplaintTicket(
+//            eventResult.getVideoId().toString(),
+//            "Multiple complaints received. Reasons: " + complaintsString
+//        );
         Video video = videoRepository.findById(eventResult.getVideoId())
                 .orElseThrow(() -> new RuntimeException("Video not found"));
 
         VideoReview videoReview = videoReviewRepository.findByVideo(video)
                 .orElse(new VideoReview());
 
-        videoReview.setJiraTicketKey(ticketKey);
+        videoReview.setJiraTicketKey(null); // todo не забудь вернуть значение
         videoReviewRepository.save(videoReview);
         log.info("Заканчиваем сознание тикета Jira для видео {}", eventResult.getVideoId());
     }
@@ -191,7 +188,8 @@ public class VideoService {
 
             // Update Jira ticket status
             if (videoReview.getJiraTicketKey() != null) {
-                jiraService.markTicketAsDone(videoReview.getJiraTicketKey());
+                log.info("Мок. Успешно переместили в Done наш Jira Ticket");
+//                jiraService.markTicketAsDone(videoReview.getJiraTicketKey());
             }
             
             entityManager.merge(video);

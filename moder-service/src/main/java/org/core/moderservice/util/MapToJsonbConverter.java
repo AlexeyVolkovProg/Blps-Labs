@@ -22,7 +22,7 @@ public class MapToJsonbConverter implements AttributeConverter<Map<BlockReason, 
         try {
             return objectMapper.writeValueAsString(attribute);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("Ошибка при сериализации JSON", e);
+                throw new RuntimeException("Ошибка при сериализации JSON", e);
         }
     }
 

@@ -8,11 +8,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.core.moderservice.dto.broker.VideoModerationEvent;
 import org.core.moderservice.service.ProcessVideoReviewService;
+import org.core.moderservice.service.camunda.CamundaService;
 import org.fusesource.stomp.jms.StompJmsConnectionFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.jms.*;
+import java.time.LocalDateTime;
+import java.util.Map;
 
 @Slf4j
 @Component
@@ -23,6 +26,8 @@ public class ModerationConsumerJMS implements MessageListener {
     String brokerUri;
     @Value("${topic.name.moder-service-request}")
     String topicName;
+
+    private final CamundaService camundaService;
 
     private Connection connection;
     private Session session;
@@ -36,7 +41,7 @@ public class ModerationConsumerJMS implements MessageListener {
             StompJmsConnectionFactory factory = new StompJmsConnectionFactory();
             factory.setBrokerURI(brokerUri);
             connection = factory.createConnection();
-            connection.setClientID("consumer-client-1"); // заюзаем для durable подписки
+            connection.setClientID("consumer-client-1");
             connection.start();
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             Topic topic = session.createTopic(topicName);
@@ -44,25 +49,27 @@ public class ModerationConsumerJMS implements MessageListener {
             consumer.setMessageListener(this);
             log.info("✅ Consumer успешно подписался на топик {} брокера {}", topicName, brokerUri);
         } catch (JMSException e) {
-           log.info(e.getMessage());
+            log.info(e.getMessage());
         }
     }
 
     @Override
     public void onMessage(Message message) {
         try {
+            log.info("✅ НАЧАЛИ ЧИТАТЬ СООБЩЕНИЕ");
             if (message instanceof TextMessage textMessage) {
                 String body = textMessage.getText();
                 VideoModerationEvent event = objectMapper.readValue(body, VideoModerationEvent.class);
                 log.info("✅ Получено сообщение о видео: {}", event.getVideoId());
-                processVideoReviewService.processVideoReview(event);
+                camundaService.correlateMessage("CORE_SERVICE_REQUEST_MESSAGE",
+                        LocalDateTime.now().toString(),
+                        Map.of("VideoId", event), null);
             }
         } catch (JsonProcessingException e) {
             log.info("Исключение parsing JSON {}", e.getMessage());
         } catch (JMSException e) {
             throw new RuntimeException(e);
         }
-
     }
 
     @PreDestroy

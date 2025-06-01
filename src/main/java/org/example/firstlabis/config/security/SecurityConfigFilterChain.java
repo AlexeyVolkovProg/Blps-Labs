@@ -55,28 +55,6 @@ public class SecurityConfigFilterChain {
                     return corsConfiguration;
                 }))
                 .authorizeHttpRequests(authorize -> authorize
-                        // .requestMatchers(WHITE_LIST_URL).permitAll()
-
-                        // .requestMatchers("/api/admin/**").hasRole("ADMIN")
-
-                        // .requestMatchers(HttpMethod.GET, "/api/videos/for-review").hasAnyAuthority(
-                        //         Privilege.REVIEW_VIDEO.name())
-
-                        // .requestMatchers(HttpMethod.POST, "/api/videos/*/moderate").hasAnyAuthority(
-                        //         Privilege.REVIEW_VIDEO.name())
-
-                        // .requestMatchers(HttpMethod.POST, "/api/videos").hasAnyAuthority(
-                        //         Privilege.CREATE_VIDEO.name())
-
-                        // .requestMatchers(HttpMethod.GET, "/api/videos/*").hasAnyAuthority(
-                        //         Privilege.VIEW_VIDEO.name())
-
-                        // .requestMatchers(HttpMethod.GET, "/api/videos/approved-rejected").hasAnyAuthority(
-                        //         Privilege.VIEW_VIDEO.name())
-
-                        // .requestMatchers(HttpMethod.POST, "/api/videos/complaints").hasAnyAuthority(
-                        //         Privilege.CREATE_COMPLAINT.name())
-
                         .anyRequest().permitAll())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationManager(authenticationManager)

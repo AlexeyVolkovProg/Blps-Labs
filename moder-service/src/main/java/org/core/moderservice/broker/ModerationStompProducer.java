@@ -13,8 +13,6 @@ import org.springframework.stereotype.Component;
 
 import javax.jms.*;
 import java.time.LocalDateTime;
-import java.util.UUID;
-
 /**
  * Компонент для отправки сообщений по протоколу STOMP в ActiveMQ
  */

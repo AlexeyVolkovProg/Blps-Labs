@@ -34,7 +34,7 @@ public class ProcessVideoReviewService {
      * @param videoModerationEvent событие уведомляющее о необходимости создания заявки на ревью видео
      */
     @Transactional
-    public void processVideoReview(VideoModerationEvent videoModerationEvent) {
+    public Boolean processVideoReview(VideoModerationEvent videoModerationEvent) {
         Video video = videoRepository.findById(videoModerationEvent.getVideoId())
                 .orElseThrow(() -> new RuntimeException("Video not found"));
         try {
@@ -53,12 +53,10 @@ public class ProcessVideoReviewService {
                                     Map.Entry::getValue))
             );
             videoReviewRepository.save(videoReview);
-            moderationStompProducer
-                    .sendMessageForModeration(new VideoModerationEventResult(video.getId(), ResultStatus.SUCCESS));
             log.info("Логика обработки видео {} успешно отработал", videoModerationEvent.getVideoId());
+            return true;
         } catch (Exception e) {
-            moderationStompProducer
-                    .sendMessageForModeration(new VideoModerationEventResult(video.getId(), ResultStatus.ERROR));
+            return false;
         }
     }
 }
